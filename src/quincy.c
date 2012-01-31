@@ -2,6 +2,7 @@
 
 #include "vmap.h"
 #include "simap.h"
+#include "ismap.h"
 
 int main(int argc, char **argv) {
 	printf("quincy: 0.0a\n");
@@ -31,6 +32,20 @@ int main(int argc, char **argv) {
 		printf("found 4: %u\n", simapn->val);
 	else
 		printf("error!\n");
+
+	ISMap *ismap = ismap_create();
+	ismap_add(ismap, 1, "1");
+	ismap_add(ismap, 2, "2");
+	ismap_add(ismap, 3, "3");
+	ismap_add(ismap, 4, "4");
+	ismap_add(ismap, 5, "5");
+
+	ISMap_Node *ismapn = ismap_find(ismap, 2);
+	if(ismapn != NULL)
+		printf("found 2: %s\n", ismapn->val);
+	else
+		printf("error!\n");
+
 
 	return 0;
 }

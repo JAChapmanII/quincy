@@ -4,8 +4,8 @@ ODIR=obj
 BDIR=.
 
 BIN=quincy
-MAPS=$(LDIR)/vmap $(LDIR)/simap
-OBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/util.o
+MAPS=$(LDIR)/vmap $(LDIR)/simap $(LDIR)/ismap
+OBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(LDIR)/ismap.o $(ODIR)/util.o
 
 LDFLAGS=-pthread
 CFLAGS=-std=c99 -pedantic -Wall -Wextra -I$(LDIR)
