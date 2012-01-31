@@ -51,8 +51,9 @@ ${NAME}_Node *${VNAME}n_create(${KEY_TYPE} key, ${VAL_TYPE} val) { // {{{
 	${VNAME}n->left = ${VNAME}n->right = NULL;
 	${VNAME}n->height = 1;
 
-	${VNAME}n->key = NULL;
-	${VNAME}n->val = NULL;
+	${INIT_KEY}(&${VNAME}n->key);
+	${INIT_VAL}(&${VNAME}n->val);
+
 	${COPY_KEY}(&${VNAME}n->key, &key);
 	${COPY_VAL}(&${VNAME}n->val, &val);
 
@@ -69,8 +70,12 @@ void ${VNAME}n_free(${NAME}_Node *${VNAME}n) { // {{{
 		${VNAME}n_free(${VNAME}n->left);
 	if(${VNAME}n->right)
 		${VNAME}n_free(${VNAME}n->right);
-	free(${VNAME}n->key);
-	free(${VNAME}n->val);
+	${KEY_TYPE} key = ${VNAME}n->key;
+	if(${KEY_VALID})
+		${FREE_KEY}(${VNAME}n->key);
+	${VAL_TYPE} val = ${VNAME}n->val;
+	if(${VAL_VALID})
+		${FREE_VAL}(${VNAME}n->val);
 	free(${VNAME}n);
 } // }}}
 
