@@ -1,0 +1,35 @@
+NAME  := SIMap
+VNAME := simap
+
+GUARD := SIMAP
+FILE  := simap
+
+H_INCLUDE :=
+C_INCLUDE := #include <string.h>
+
+KEY_TYPE := char *
+VAL_TYPE := uint32_t
+
+KEY_VALID := (key != NULL)
+VAL_VALID := (1)
+
+INIT_KEY := simap_stringInit
+INIT_VAL := simap_uint32Init
+
+FREE_KEY := simap_stringFree
+FREE_VAL := simap_uint32Free
+
+COPY_KEY := simap_stringCopy
+COPY_VAL := simap_uint32Copy
+
+KEY_COMP := simap_stringCompare
+
+KEY_SIZE := simap_stringSize
+VAL_SIZE := simap_uint32Size
+
+WRITE_KEY := simap_stringWrite
+WRITE_VAL := simap_uint32Write
+
+READ_KEY := simap_stringRead
+READ_VAL := simap_uint32Read
+

@@ -1,0 +1,104 @@
+//----------------------------------------
+void simap_stringInit(char **str) { // {{{
+	*str = NULL;
+} // }}}
+void simap_uint32Init(uint32_t *uint32) { // {{{
+	*uint32 = 0;
+} // }}}
+
+void simap_stringFree(char *str) { // {{{
+	free(str);
+} // }}}
+void simap_uint32Free(uint32_t uint32) { // {{{
+	uint32 = 0;
+} // }}}
+
+int simap_stringCopy(char **dst, char **src) { // {{{
+	if(*src == NULL)
+		return INVALID_SOURCE;
+	if(*dst != NULL) {
+		free(*dst);
+		*dst = NULL;
+	}
+	*dst = calloc(strlen(*src) + 1, 1);
+	if(*dst == NULL)
+		return ALLOC_FAIL;
+
+	strcpy(*dst, *src);
+	return SUCCESS;
+} // }}}
+int simap_uint32Copy(uint32_t *dst, uint32_t *src) { // {{{
+	if((dst == NULL) || (src == NULL))
+		return FAILURE;
+
+	*dst = *src;
+	return SUCCESS;
+} // }}}
+
+int simap_stringCompare(char *s1, char *s2) { // {{{
+	return strcmp(s1, s2);
+} // }}}
+
+size_t simap_stringSize(char *str) { // {{{
+	if(str == NULL)
+		return 0;
+	return strlen(str);
+} // }}}
+size_t simap_uint32Size(uint32_t uint32) { // {{{
+	return sizeof(uint32_t);
+} // }}}
+
+int simap_stringWrite(char *str, FILE *file) { // {{{
+	size_t len = strlen(str), byteSize = (2 << 8) - 1;
+	if(len > byteSize)
+		return FAILURE;
+
+	uint8_t l = len;
+	if(fwrite(&l, 1, 1, file) != 1)
+		return FAILURE;// TODO: error handling? Seek backward?
+	if(fwrite(str, 1, len, file) != len)
+		return FAILURE;// TODO: error handling? Seek backward?
+
+	return SUCCESS;
+} // }}}
+int simap_stringRead(char **str, FILE *file) { // {{{
+	uint8_t len = 0;
+	if(fread(&len, 1, 1, file) != 1) {
+		return FAILURE;// TODO: error handling? Seek?
+	}
+
+	*str = calloc(len + 1, 1);
+	if(*str == NULL) {
+		return ALLOC_FAIL; // TODO: error handling? Seek?
+	}
+
+	if(fread(*str, 1, len, file) != len) {
+		return FAILURE;// TODO: error handling? Seek?
+	}
+
+	(*str)[len] = '\0';
+	return SUCCESS;
+} // }}}
+
+int simap_uint32Write(uint32_t uint32, FILE *file) { // {{{
+	char buf[sizeof(uint32_t)] = { 0 };
+	for(size_t i = 0; i < sizeof(uint32_t); ++i)
+		buf[i] = (uint32 >> (8*i)) & 0xff;
+
+	if(fwrite(buf, 1, sizeof(uint32_t), file) != sizeof(uint32_t)) {
+		return FAILURE; // TODO: error handling? Seek?
+	}
+	return SUCCESS;
+} // }}}
+int simap_uint32Read(uint32_t *uint32, FILE *file) { // {{{
+	char buf[sizeof(uint32_t)] = { 0 };
+	if(fread(buf, 1, sizeof(uint32_t), file) != sizeof(uint32_t)) {
+		return FAILURE; // TODO:: error handling? Seek?
+	}
+
+	for(size_t i = sizeof(uint32_t); i > 0; --i)
+		*uint32 = (*uint32 << 8) + buf[i - 1];
+	return SUCCESS;
+} // }}}
+
+// vim: ft=c:

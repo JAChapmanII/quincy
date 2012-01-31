@@ -1,0 +1,22 @@
+//----------------------------------------
+void simap_stringInit(char **str);
+void simap_uint32Init(uint32_t *uint32);
+
+void simap_stringFree(char *str);
+void simap_uint32Free(uint32_t uint32);
+
+int simap_stringCopy(char **dst, char **src);
+int simap_uint32Copy(uint32_t *dst, uint32_t *src);
+
+int simap_stringCompare(char *s1, char *s2);
+
+size_t simap_stringSize(char *str);
+size_t simap_uint32Size(uint32_t uint32);
+
+int simap_stringWrite(char *str, FILE *file);
+int simap_stringRead(char **str, FILE *file);
+
+int simap_uint32Write(uint32_t uint32, FILE *file);
+int simap_uint32Read(uint32_t *uint32, FILE *file);
+
+// vim: ft=c:
