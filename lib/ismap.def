@@ -1,0 +1,38 @@
+NAME  := ISMap
+VNAME := ismap
+
+GUARD := ISMAP
+FILE  := ismap
+
+H_INCLUDE :=
+C_INCLUDE := #include <string.h>
+
+KEY_TYPE := uint32_t
+VAL_TYPE := char *
+
+KEY_VALID := (key || !key)
+VAL_VALID := (val != NULL)
+
+INIT_KEY := ismap_uint32Init
+INIT_VAL := ismap_stringInit
+
+FREE_KEY := ismap_uint32Free
+FREE_VAL := ismap_stringFree
+
+COPY_KEY := ismap_uint32Copy
+COPY_VAL := ismap_stringCopy
+
+KEY_COMP := ismap_uint32Compare
+
+FORMAT_KEY := ismap_uint32Format
+FORMAT_VAL := ismap_stringFormat
+
+KEY_SIZE := ismap_uint32Size
+VAL_SIZE := ismap_stringSize
+
+WRITE_KEY := ismap_uint32Write
+WRITE_VAL := ismap_stringWrite
+
+READ_KEY := ismap_uint32Read
+READ_VAL := ismap_stringRead
+

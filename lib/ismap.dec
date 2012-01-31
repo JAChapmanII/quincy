@@ -1,0 +1,25 @@
+//----------------------------------------
+void ismap_uint32Init(uint32_t *uint32);
+void ismap_stringInit(char **str);
+
+void ismap_uint32Free(uint32_t uint32);
+void ismap_stringFree(char *str);
+
+int ismap_uint32Copy(uint32_t *dst, uint32_t *src);
+int ismap_stringCopy(char **dst, char **src);
+
+int ismap_uint32Compare(uint32_t u1, uint32_t u2);
+
+char *ismap_uint32Format(uint32_t uint32);
+char *ismap_stringFormat(char *str);
+
+size_t ismap_uint32Size(uint32_t uint32);
+size_t ismap_stringSize(char *str);
+
+int ismap_uint32Write(uint32_t uint32, FILE *file);
+int ismap_uint32Read(uint32_t *uint32, FILE *file);
+
+int ismap_stringWrite(char *str, FILE *file);
+int ismap_stringRead(char **str, FILE *file);
+
+// vim: ft=c:
