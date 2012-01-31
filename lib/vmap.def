@@ -13,6 +13,12 @@ VAL_TYPE := char *
 KEY_VALID := (key != NULL)
 VAL_VALID := (val != NULL)
 
+INIT_KEY := vmap_stringInit
+INIT_VAL := vmap_stringInit
+
+FREE_KEY := vmap_stringFree
+FREE_VAL := vmap_stringFree
+
 COPY_KEY := vmap_stringCopy
 COPY_VAL := vmap_stringCopy
 

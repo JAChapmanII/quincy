@@ -1,4 +1,11 @@
 //----------------------------------------
+void vmap_stringInit(char **str) { // {{{
+	*str = NULL;
+} // }}}
+void vmap_stringFree(char *str) { // {{{
+	free(str);
+} // }}}
+
 int vmap_stringCopy(char **dst, char **src) { // {{{
 	if(*src == NULL)
 		return INVALID_SOURCE;

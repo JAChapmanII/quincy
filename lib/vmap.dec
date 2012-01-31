@@ -1,4 +1,7 @@
 //----------------------------------------
+void vmap_stringInit(char **str);
+void vmap_stringFree(char *str);
+
 int vmap_stringCopy(char **dst, char **src);
 int vmap_stringCompare(char *s1, char *s2);
 size_t vmap_stringSize(char *str);
