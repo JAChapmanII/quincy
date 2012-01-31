@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "vmap.h"
+#include "simap.h"
 
 int main(int argc, char **argv) {
 	printf("quincy: 0.0a\n");
