@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define _POSIX_SOURCE
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -13,7 +14,7 @@
 /* Size of line buffers */
 #define BLSIZE 4096
 
-IRCSock *ircsock_create(char *host, int port, char *nick, char *chan) { /*{{{*/
+IRCSock *ircsock_create(char *host, int port, char *nick) { /*{{{*/
 	IRCSock *ircsock = malloc(sizeof(IRCSock));
 	if(!ircsock)
 		return NULL;
@@ -39,13 +40,6 @@ IRCSock *ircsock_create(char *host, int port, char *nick, char *chan) { /*{{{*/
 		return NULL;
 	}
 	strcpy(ircsock->nick, nick);
-
-	ircsock->chan = malloc(strlen(chan) + 1);
-	if(!ircsock->chan) {
-		ircsock_free(ircsock);
-		return NULL;
-	}
-	strcpy(ircsock->chan, chan);
 
 	ircsock->socket = -1;
 
@@ -93,7 +87,7 @@ struct addrinfo *ircsock_lookupDomain(IRCSock *ircsock) { /*{{{*/
 	return result;
 } /*}}}*/
 
-int ircsock_connect(IRCSock *ircsock) { /*{{{*/
+int ircsock_connect(IRCSock *ircsock) { // {{{
 	struct addrinfo *result;
 	int error;
 
@@ -109,8 +103,61 @@ int ircsock_connect(IRCSock *ircsock) { /*{{{*/
 		return 3;
 	freeaddrinfo(result);
 
-	return 0;
-} /*}}}*/
+	char *nickc = malloc(16 + strlen(ircsock->nick));
+	if(nickc == NULL) {
+		fprintf(stderr, "ircsock_connect: malloc for nickc failed\n");
+		return IRCSOCK_MERROR;
+	}
+
+	char *userc = malloc(16 + strlen(ircsock->nick) * 2);
+	if(userc == NULL) {
+		fprintf(stderr, "ircsock_connect: malloc for userc failed\n");
+		free(nickc);
+		return IRCSOCK_MERROR;
+	}
+
+	strcpy(nickc, "NICK ");
+	strcat(nickc, ircsock->nick);
+
+	strcpy(userc, "USER ");
+	strcat(userc, ircsock->nick);
+	strcat(userc, " j j :");
+	strcat(userc, ircsock->nick);
+
+	ircsock_send(ircsock, nickc);
+	usleep(10000);
+	ircsock_send(ircsock, userc);
+	usleep(10000);
+
+	char *str = NULL;
+	int done = 0;
+	while(!done) {
+		ircsock_read(ircsock);
+		while((str = cbuffer_pop(ircsock->cbuf)) != NULL) {
+			if(strstr(str, " 433 ")) {
+				fprintf(stderr, "ircsock_connect: nick in use!\n");
+				return 433;
+			}
+			if(strstr(str, " 432 ")) {
+				fprintf(stderr, "ircsock_connect: nick contains illegal charaters\n");
+				return 432;
+			}
+			if(strstr(str, " 376 ")) {
+				free(str);
+				return 0;
+			}
+			if((str[0] == 'P') && (str[1] == 'I') &&
+				(str[2] == 'N') && (str[3] == 'G') &&
+				(str[4] == ' ') && (str[5] == ':')) {
+				str[1] = 'O';
+				ircsock_send(ircsock, str);
+			}
+			free(str);
+		}
+	}
+
+	return -1;
+} // }}}
 
 ssize_t ircsock_read(IRCSock *ircsock) { /*{{{*/
 	/* We must have enough space for the newline and null character */
@@ -147,64 +194,58 @@ ssize_t ircsock_send(IRCSock *ircsock, char *str) { /*{{{*/
 } /*}}}*/
 
 ssize_t ircsock_pmsg(IRCSock *ircsock, char *target, char *msg) { /*{{{*/
-	char *buf = malloc(strlen(msg) + strlen("PRIVMSG ") + strlen(target) + 1);
+	char *buf = malloc(strlen(msg) + strlen("PRIVMSG ") + strlen(target) + 3);
 	if(!buf) {
 		fprintf(stderr, "Failed to malloc in irsock_pmsg!\n");
 		return IRCSOCK_MERROR;
 	}
 	strcpy(buf, "PRIVMSG ");
 	strcat(buf, target);
-	strcat(buf, " ");
+	strcat(buf, " :");
 	strcat(buf, msg);
 	return ircsock_send(ircsock, buf);
 } /*}}}*/
 
-int ircsock_join(IRCSock *ircsock) { /*{{{*/
-	int foundPing = 0;
+int ircsock_join(IRCSock *ircsock, char *chan) { /*{{{*/
+	if(ircsock->chan != NULL)
+		free(ircsock->chan);
+
+	ircsock->chan = calloc(strlen(chan) + 1, 1);
+	if(!ircsock->chan) {
+		return 5;
+	}
+	strcpy(ircsock->chan, chan);
+
 	/* these use 16 as it should cover needed space for 4 letter command, a
 	 * space, and extra arguments besides nick/chan */
-	char *nickc = malloc(16 + strlen(ircsock->nick));
-	char *userc = malloc(16 + strlen(ircsock->nick) * 2);
 	char *joinc = malloc(16 + strlen(ircsock->chan));
-	char *str = NULL;
 
-	if(!nickc || !userc || !joinc) {
-		fprintf(stderr, "Failed malloc in ircsock_join\n");
+	if(!joinc) {
+		fprintf(stderr, "ircsock_join: malloc failed\n");
 		return IRCSOCK_MERROR;
 	}
-
-	strcpy(nickc, "NICK ");
-	strcat(nickc, ircsock->nick);
-
-	strcpy(userc, "USER ");
-	strcat(userc, ircsock->nick);
-	strcat(userc, " j j :");
-	strcat(userc, ircsock->nick);
 
 	strcpy(joinc, "JOIN ");
 	strcat(joinc, ircsock->chan);
 
-	ircsock_send(ircsock, nickc);
-	ircsock_send(ircsock, userc);
 	usleep(100000);
 
 	ircsock_send(ircsock, joinc);
-	while(!foundPing) {
+
+	char *str = NULL;
+	int done = 0;
+	while(!done) {
 		ircsock_read(ircsock);
 		while((str = cbuffer_pop(ircsock->cbuf)) != NULL) {
-			if(strstr(str, " 433 ")) {
-				fprintf(stderr, "Nickname in use!\n");
-				return 433;
+			if(strstr(str, " 332 ") || strstr(str, " JOIN ")) {
+				free(str);
+				return 0;
 			}
 			if((str[0] == 'P') && (str[1] == 'I') &&
 				(str[2] == 'N') && (str[3] == 'G') &&
 				(str[4] == ' ') && (str[5] == ':')) {
 				str[1] = 'O';
 				ircsock_send(ircsock, str);
-				free(str);
-
-				foundPing = 1;
-				break;
 			}
 			free(str);
 		}

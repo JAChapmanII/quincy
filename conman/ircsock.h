@@ -20,6 +20,7 @@ typedef struct {
 	int domain;
 
 	char *nick;
+
 	char *chan;
 
 	int socket;
@@ -33,7 +34,7 @@ typedef struct {
  * Returns pointer to new IRCSock, or
  * 	NULL on failure (does not leak)
  */
-IRCSock *ircsock_create(char *host, int port, char *nick, char *chan);
+IRCSock *ircsock_create(char *host, int port, char *nick);
 /* Frees the memory associated with an IRCSock.
  *
  * Note: Does not disconnect properly from connected socket
@@ -74,7 +75,7 @@ ssize_t ircsock_pmsg(IRCSock *ircsock, char *target, char *msg);
  * 	IRCSOCK_MERROR on failed malloc (prints to stderr)
  * 	other value -- on corresponding IRC response code
  */
-int ircsock_join(IRCSock *ircsock);
+int ircsock_join(IRCSock *ircsock, char *chan);
 /* Sends QUIT command through socket
  *
  * Returns 6 on success (strlen("QUIT") + 2), or
