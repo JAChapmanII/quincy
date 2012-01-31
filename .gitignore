@@ -1,2 +1,7 @@
 quincy
 *.o
+
+src/ismap.?
+src/simap.?
+src/vmap.?
+
