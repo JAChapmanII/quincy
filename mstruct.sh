@@ -1,8 +1,9 @@
 #!/bin/bash
 
-dir="${2-.}"
-TEMPLATE_H="$dir/map.h"
-TEMPLATE_C="$dir/map.c"
+idir="${2-.}"
+TEMPLATE_H="$idir/map.h"
+TEMPLATE_C="$idir/map.c"
+odir="${3-$idir}"
 
 if [[ -z $1 ]]; then
 	echo "Usage: $0 <structure name>"
@@ -22,8 +23,6 @@ tmph="$(mktemp)"
 tmpc="$(mktemp)"
 cp "${TEMPLATE_H}" "$tmph"
 cp "${TEMPLATE_C}" "$tmpc"
-
-#fdline="$(grep -n "<<<--- FUNCTION_DECLARATIONS" "$tmpc" | cut -d':' -f1)"
 
 tmp="$(mktemp)"
 cat > "$tmp" <<EOF
@@ -59,7 +58,7 @@ while read var; do
 	#echo "$vname: $value"
 done < <(sed -r '/^\s*$/d' "${sname}.def")
 
-#echo File name is: $dir/$file
-mv "$tmph" "$dir/$file.h"
-mv "$tmpc" "$dir/$file.c"
+#echo File name is: $odir/$file
+mv "$tmph" "$odir/$file.h"
+mv "$tmpc" "$odir/$file.c"
 

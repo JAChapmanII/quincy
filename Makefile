@@ -1,14 +1,13 @@
 SDIR=src
-LDIR=lib
 ODIR=obj
 BDIR=.
 
 BIN=quincy
-MAPS=$(LDIR)/vmap $(LDIR)/simap $(LDIR)/ismap
-OBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(LDIR)/ismap.o $(ODIR)/util.o
+MAPS=map/vmap map/simap map/ismap
+OBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(ODIR)/util.o
 
 LDFLAGS=-pthread
-CFLAGS=-std=c99 -pedantic -Wall -Wextra -I$(LDIR)
+CFLAGS=-std=c99 -pedantic -Wall -Wextra
 
 ifndef RELEASE
 CFLAGS+=-g
@@ -31,11 +30,9 @@ $(BDIR)/$(BIN): $(ODIR)/$(BIN).o $(OBJS)
 
 $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
-$(ODIR)/%.o: $(LDIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(LDIR)/%: $(LDIR)/%.def $(LDIR)/%.dec $(LDIR)/%.def
-	$(LDIR)/mstruct.sh $< $(LDIR)
+map/%: map/%.def map/%.dec map/%.def
+	$(BDIR)/mstruct.sh $< map $(SDIR)
 
 clean:
 	rm -f $(ODIR)/*.o $(BDIR)/$(BIN)
