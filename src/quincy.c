@@ -19,6 +19,19 @@ int main(int argc, char **argv) {
 	else
 		printf("error!\n");
 
+	SIMap *simap = simap_create();
+	simap_add(simap, "1", 1);
+	simap_add(simap, "2", 2);
+	simap_add(simap, "3", 3);
+	simap_add(simap, "4", 4);
+	simap_add(simap, "5", 5);
+
+	SIMap_Node *simapn = simap_find(simap, "4");
+	if(simapn != NULL)
+		printf("found 4: %u\n", simapn->val);
+	else
+		printf("error!\n");
+
 	return 0;
 }
 
