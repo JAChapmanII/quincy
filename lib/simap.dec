@@ -10,6 +10,9 @@ int simap_uint32Copy(uint32_t *dst, uint32_t *src);
 
 int simap_stringCompare(char *s1, char *s2);
 
+char *simap_stringFormat(char *str);
+char *simap_uint32Format(uint32_t uint32);
+
 size_t simap_stringSize(char *str);
 size_t simap_uint32Size(uint32_t uint32);
 

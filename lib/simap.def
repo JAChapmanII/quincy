@@ -11,7 +11,7 @@ KEY_TYPE := char *
 VAL_TYPE := uint32_t
 
 KEY_VALID := (key != NULL)
-VAL_VALID := (1)
+VAL_VALID := (val || !val)
 
 INIT_KEY := simap_stringInit
 INIT_VAL := simap_uint32Init
@@ -23,6 +23,9 @@ COPY_KEY := simap_stringCopy
 COPY_VAL := simap_uint32Copy
 
 KEY_COMP := simap_stringCompare
+
+FORMAT_KEY := simap_stringFormat
+FORMAT_VAL := simap_uint32Format
 
 KEY_SIZE := simap_stringSize
 VAL_SIZE := simap_uint32Size

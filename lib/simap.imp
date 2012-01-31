@@ -1,4 +1,6 @@
 //----------------------------------------
+#define MAX_UINT32_SLEN 10
+
 void simap_stringInit(char **str) { // {{{
 	*str = NULL;
 } // }}}
@@ -10,7 +12,8 @@ void simap_stringFree(char *str) { // {{{
 	free(str);
 } // }}}
 void simap_uint32Free(uint32_t uint32) { // {{{
-	uint32 = 0;
+	if(uint32)
+		uint32 = 0;
 } // }}}
 
 int simap_stringCopy(char **dst, char **src) { // {{{
@@ -39,12 +42,31 @@ int simap_stringCompare(char *s1, char *s2) { // {{{
 	return strcmp(s1, s2);
 } // }}}
 
+char *simap_stringFormat(char *str) { // {{{
+	char *copy = calloc(strlen(str) + 1, 1);
+	if(copy == NULL) {
+		return NULL; // TODO: better handling?
+	}
+	strcpy(copy, str);
+	return copy;
+} // }}}
+char *simap_uint32Format(uint32_t uint32) { // {{{
+	char *buf = calloc(MAX_UINT32_SLEN + 1, 1);
+	if(buf == NULL) {
+		return NULL; // TODO: better handling?
+	}
+	snprintf(buf, MAX_UINT32_SLEN, "%u", uint32);
+	return buf;
+} // }}}
+
 size_t simap_stringSize(char *str) { // {{{
 	if(str == NULL)
 		return 0;
 	return strlen(str);
 } // }}}
 size_t simap_uint32Size(uint32_t uint32) { // {{{
+	if(uint32)
+		uint32 = 0;
 	return sizeof(uint32_t);
 } // }}}
 
