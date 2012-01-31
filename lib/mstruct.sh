@@ -1,7 +1,8 @@
 #!/bin/bash
 
-TEMPLATE_H="map.h"
-TEMPLATE_C="map.c"
+dir="${2-.}"
+TEMPLATE_H="$dir/map.h"
+TEMPLATE_C="$dir/map.c"
 
 if [[ -z $1 ]]; then
 	echo "Usage: $0 <structure name>"
@@ -55,10 +56,10 @@ while read var; do
 	fi
 	sed -i "s/\\\${$vname}/$value/g" "$tmph"
 	sed -i "s/\\\${$vname}/$value/g" "$tmpc"
-	echo "$vname: $value"
+	#echo "$vname: $value"
 done < <(sed -r '/^\s*$/d' "${sname}.def")
 
-echo File name is: $file
-mv "$tmph" "$file.h"
-mv "$tmpc" "$file.c"
+#echo File name is: $dir/$file
+mv "$tmph" "$dir/$file.h"
+mv "$tmpc" "$dir/$file.c"
 
