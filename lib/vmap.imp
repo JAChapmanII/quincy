@@ -25,6 +25,15 @@ int vmap_stringCompare(char *s1, char *s2) { // {{{
 	return strcmp(s1, s2);
 } // }}}
 
+char *vmap_stringFormat(char *str) { // {{{
+	char *copy = calloc(strlen(str) + 1, 1);
+	if(copy == NULL) {
+		return NULL; // TODO: better handling?
+	}
+	strcpy(copy, str);
+	return copy;
+} // }}}
+
 size_t vmap_stringSize(char *str) { // {{{
 	if(str == NULL)
 		return 0;

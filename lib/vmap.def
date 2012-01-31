@@ -24,6 +24,9 @@ COPY_VAL := vmap_stringCopy
 
 KEY_COMP := vmap_stringCompare
 
+FORMAT_KEY := vmap_stringFormat
+FORMAT_VAL := vmap_stringFormat
+
 KEY_SIZE := vmap_stringSize
 VAL_SIZE := vmap_stringSize
 
