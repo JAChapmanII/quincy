@@ -2,6 +2,7 @@ LDFLAGS=-pthread
 CFLAGS=-std=c99 -pedantic -Wall -Wextra
 
 SDIR=src
+LDIR=lib
 ODIR=obj
 BDIR=.
 
@@ -28,6 +29,9 @@ $(BDIR)/$(BIN): $(ODIR)/$(BIN).o
 
 $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(LDIR)/%.c $(LDIR)/%.h: $(LDIR)/%.def $(LDIR)/%.dec $(LDIR)/%.def
+	$(LDIR)/mstruct.sh $< $(LDIR)
 
 clean:
 	rm -f $(ODIR)/*.o $(BDIR)/$(BIN)
