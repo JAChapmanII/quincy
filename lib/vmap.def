@@ -1,0 +1,29 @@
+NAME  := VMap
+VNAME := vmap
+
+GUARD := VMAP
+FILE  := vmap
+
+H_INCLUDE :=
+C_INCLUDE := #include <string.h>
+
+KEY_TYPE := char *
+VAL_TYPE := char *
+
+KEY_VALID := (key != NULL)
+VAL_VALID := (val != NULL)
+
+COPY_KEY := vmap_stringCopy
+COPY_VAL := vmap_stringCopy
+
+KEY_COMP := vmap_stringCompare
+
+KEY_SIZE := vmap_stringSize
+VAL_SIZE := vmap_stringSize
+
+WRITE_KEY := vmap_stringWrite
+WRITE_VAL := vmap_stringWrite
+
+READ_KEY := vmap_stringRead
+READ_VAL := vmap_stringRead
+

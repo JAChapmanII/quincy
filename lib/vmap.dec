@@ -1,0 +1,9 @@
+//----------------------------------------
+int vmap_stringCopy(char **dst, char **src);
+int vmap_stringCompare(char *s1, char *s2);
+size_t vmap_stringSize(char *str);
+
+int vmap_stringWrite(char *str, FILE *file);
+int vmap_stringRead(char **str, FILE *file);
+
+// vim: ft=c:
