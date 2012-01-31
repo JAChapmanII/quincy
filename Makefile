@@ -5,6 +5,7 @@ BDIR=.
 
 BIN=quincy
 MAPS=$(LDIR)/vmap $(LDIR)/simap
+OBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/util.o
 
 LDFLAGS=-pthread
 CFLAGS=-std=c99 -pedantic -Wall -Wextra -I$(LDIR)
@@ -25,7 +26,7 @@ dirs:
 	mkdir -p $(SDIR) $(ODIR) $(BDIR)
 
 $(BIN): $(BDIR)/$(BIN)
-$(BDIR)/$(BIN): $(ODIR)/$(BIN).o $(ODIR)/vmap.o $(ODIR)/util.o
+$(BDIR)/$(BIN): $(ODIR)/$(BIN).o $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 $(ODIR)/%.o: $(SDIR)/%.c
