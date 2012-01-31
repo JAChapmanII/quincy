@@ -375,27 +375,37 @@ int ${VNAME}_dump(${NAME} *${VNAME}, char *fileName) { // {{{
 int ${VNAME}n_writeDot(${NAME}_Node *${VNAME}n, FILE *of, int nullCount) { // {{{
 	if(!of || !${VNAME}n)
 		return 0;
-	fprintf(of, "\t\"%s = %s\";\n", ${VNAME}n->key, ${VNAME}n->val);
+	char *keyString = ${FORMAT_KEY}(${VNAME}n->key);
+	char *valString = ${FORMAT_VAL}(${VNAME}n->val);
+	fprintf(of, "\t\"%s = %s\";\n", keyString, valString);
 	if(${VNAME}n->left) {
-		fprintf(of, "\t\"%s = %s\" -> \"%s = %s\";\n",
-				${VNAME}n->key, ${VNAME}n->val, ${VNAME}n->left->key, ${VNAME}n->left->val);
+		char *lKeyString = ${FORMAT_KEY}(${VNAME}n->left->key);
+		char *lValString = ${FORMAT_VAL}(${VNAME}n->left->val);
+		fprintf(of, "\t\"%s = %s\" -> \"%s = %s\";\n", keyString, valString,
+				lKeyString, lValString);
+		free(lKeyString);
+		free(lValString);
 		nullCount += ${VNAME}n_writeDot(${VNAME}n->left, of, nullCount);
 	} else {
 		fprintf(of, "null%d [shape=point]\n", nullCount);
-		fprintf(of, "\t\"%s = %s\" -> null%d\n",
-				${VNAME}n->key, ${VNAME}n->val, nullCount);
+		fprintf(of, "\t\"%s = %s\" -> null%d\n", keyString, valString, nullCount);
 		nullCount++;
 	}
 	if(${VNAME}n->right) {
-		fprintf(of, "\t\"%s = %s\" -> \"%s = %s\";\n",
-				${VNAME}n->key, ${VNAME}n->val, ${VNAME}n->right->key, ${VNAME}n->right->val);
+		char *rKeyString = ${FORMAT_KEY}(${VNAME}n->right->key);
+		char *rValString = ${FORMAT_VAL}(${VNAME}n->right->val);
+		fprintf(of, "\t\"%s = %s\" -> \"%s = %s\";\n", keyString, valString,
+				rKeyString, rValString);
+		free(rKeyString);
+		free(rValString);
 		nullCount += ${VNAME}n_writeDot(${VNAME}n->right, of, nullCount);
 	} else {
 		fprintf(of, "null%d [shape=point]\n", nullCount);
-		fprintf(of, "\t\"%s = %s\" -> null%d\n",
-				${VNAME}n->key, ${VNAME}n->val, nullCount);
+		fprintf(of, "\t\"%s = %s\" -> null%d\n", keyString, valString, nullCount);
 		nullCount++;
 	}
+	free(keyString);
+	free(valString);
 	return nullCount;
 } // }}}
 int ${VNAME}_writeDot(${NAME} *${VNAME}, char *outputName) { // {{{
