@@ -2,9 +2,10 @@ SDIR=src
 ODIR=obj
 BDIR=.
 
-BIN=quincy
+BINS=$(BDIR)/quincy $(BDIR)/cm
 MAPS=map/vmap map/simap map/ismap
-OBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(ODIR)/util.o
+QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(ODIR)/util.o
+MOBJS=
 
 LDFLAGS=-pthread
 CFLAGS=-std=c99 -pedantic -Wall -Wextra
@@ -20,15 +21,18 @@ CFLAGS+=-pg
 LDFLAGS+=-pg
 endif
 
-all: dirs $(MAPS) $(BIN)
+all: dirs $(MAPS) $(BINS)
 dirs:
 	mkdir -p $(SDIR) $(ODIR) $(BDIR)
 
-$(BIN): $(BDIR)/$(BIN)
-$(BDIR)/$(BIN): $(ODIR)/$(BIN).o $(OBJS)
+$(BDIR)/quincy: $(ODIR)/quincy.o $(QOBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
+$(BDIR)/cm: $(ODIR)/cm.o $(MOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 $(ODIR)/%.o: $(SDIR)/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+$(ODIR)/%.o: conman/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 map/%: map/%.def map/%.dec map/%.def
