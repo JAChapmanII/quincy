@@ -102,12 +102,10 @@ struct addrinfo *ircsock_lookupDomain(IRCSock *ircsock) { // {{{
 int ircsock_connect(IRCSock *ircsock) { // {{{
 	// attempt to create socket
 	ircsock->socket = socket(AF_INET, SOCK_STREAM, 0);
-	if(ircsock->socket == -1)
+	if(ircsock->socket == -1) {
+		fprintf(stderr, "ircsock_connect: failed to create socket\n");
 		return 1;
-
-	// set socket to non-blocking mode
-	int ss = fcntl(ircsock->socket, F_GETFL, 0);
-	fcntl(ircsock->socket, F_SETFL, ss | O_NONBLOCK);
+	}
 
 	// lookup address info for host
 	struct addrinfo *result = ircsock_lookupDomain(ircsock);
@@ -116,9 +114,15 @@ int ircsock_connect(IRCSock *ircsock) { // {{{
 
 	// connect to host
 	int error = connect(ircsock->socket, result->ai_addr, result->ai_addrlen);
-	if(error == -1)
+	if(error == -1) {
+		perror("ircsock_connect");
 		return 3;
+	}
 	freeaddrinfo(result);
+
+	// set socket to non-blocking mode
+	int ss = fcntl(ircsock->socket, F_GETFL, 0);
+	fcntl(ircsock->socket, F_SETFL, ss | O_NONBLOCK);
 
 	// allocate space for NICK IRC command
 	char *nickc = malloc(16 + strlen(ircsock->nick));
@@ -232,8 +236,7 @@ char *ircsock_read(IRCSock *ircsock) { // {{{
 	}
 
 	line = ircsock_fetch(ircsock);
-	if(line != NULL)
-		return line;
+	return line;
 } // }}}
 
 ssize_t ircsock_send(IRCSock *ircsock, char *str) { // {{{
@@ -254,6 +257,14 @@ ssize_t ircsock_send(IRCSock *ircsock, char *str) { // {{{
 	if(wamount < 0) {
 		perror("ircsock_send");
 		return wamount;
+	} else if(wamount > 0) {
+		size_t offset = 0;
+		while(offset + wamount < IRCSOCK_BUF_SIZE) {
+			ircsock->wbuf[offset] = ircsock->wbuf[offset + wamount];
+			offset++;
+		}
+		while(offset < IRCSOCK_BUF_SIZE)
+			ircsock->wbuf[offset++] = '\0';
 	}
 
 	return wamount;
