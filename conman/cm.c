@@ -9,6 +9,7 @@
 #define DEFAULT_NICK   "quincy"
 #define DEFAULT_PORT    6667
 #define DEFAULT_CHAN   "#zebra"
+#define DEFAULT_BINARY "quincy"
 
 int closePipe(int *fds);
 int fileExists(char *fileName);
@@ -75,41 +76,67 @@ int subprocessPipe(char *binary, char **argv, int *fds) { // {{{
 int main(int argc, char **argv) {
 	char *server = (argc > 1) ? argv[1] : DEFAULT_SERVER,
 		*nick = (argc > 2) ? argv[2] : DEFAULT_NICK,
-		*chan = (argc > 3) ? argv[3] : DEFAULT_CHAN;
+		*chan = (argc > 3) ? argv[3] : DEFAULT_CHAN,
+		*binary = (argc > 4) ? argv[4] : DEFAULT_BINARY;
 	int port = DEFAULT_PORT;
-	if(argc > 4) {
-		port = atoi(argv[4]);
+	if(argc > 5) {
+		port = atoi(argv[5]);
 		port = (port == 0) ? DEFAULT_PORT : port;
 	}
-
-	int fds[2] = { 0 };
-	if(subprocessPipe("/bin/echo", argv, fds) != 0) {
-		fprintf(stderr, "main: couldn't invoke echo\n");
+	if(!fileExists(binary)) {
+		fprintf(stderr, "main: %s: file does not exist\n", binary);
+		return 1;
 	}
-	char buf[4096];
-	FILE *in = fdopen(fds[0], "r");
-	while(!feof(in)) {
-		if(fgets(buf, 4096 - 1, in) == buf)
-			printf("%s", buf);
-	}
-	closePipe(fds);
 
 	printf("Creating isock...\n");
 	IRCSock *isock = ircsock_create(server, port, nick);
 	if(isock == NULL) {
 		fprintf(stderr, "main: could not create isock\n");
-		return 1;
+		return 2;
 	}
 	printf("Connecting %s@%s:%d...\n", nick, server, port);
 	if(ircsock_connect(isock) != 0) {
 		fprintf(stderr, "main: isock could not connect\n");
-		return 2;
+		return 3;
 	}
 	printf("Joining %s...\n", chan);
 	if(ircsock_join(isock, chan)) {
 		fprintf(stderr, "main: isock could not join\n");
-		return 3;
+		return 4;
 	}
+
+	int fds[2] = { 0 };
+	if(subprocessPipe(binary, argv, fds) != 0) {
+		fprintf(stderr, "main: couldn't create subprocess pipe to: %s\n", binary);
+		return 5;
+	}
+	FILE *in = fdopen(fds[0], "r"), *out = fdopen(fds[1], "w");
+
+	char buf[4096] = { 0 };
+	while(!feof(in)) {
+		char *str = ircsock_read(isock);
+		if(str != NULL) {
+			if((str[0] == 'P') && (str[1] == 'I') &&
+				(str[2] == 'N') && (str[3] == 'G') &&
+				(str[4] == ' ') && (str[5] == ':')) {
+				str[1] = 'O';
+				ircsock_send(isock, str);
+				free(str);
+				str = NULL;
+			}
+		}
+		if(str != NULL) {
+			fprintf(out, "%s\n", str);
+			free(str);
+		}
+
+		if(fgets(buf, 4096 - 1, in) == buf)
+			printf("%s", buf);
+	}
+	closePipe(fds);
+
+
+
 	printf("Sending pmsg...\n");
 	ircsock_pmsg(isock, "#zebra", "Hello, there!");
 	for(int i = 0; i < 3; ++i)
