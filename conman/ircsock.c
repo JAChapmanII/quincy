@@ -1,18 +1,35 @@
 #include "ircsock.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define _POSIX_SOURCE
+#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
-#include <unistd.h>
-#include <stdio.h>
 
-/* Size of character buffers */
+// Size of character buffers
 #define BCSIZE 1024
-/* Size of line buffers */
+// Size of line buffers
 #define BLSIZE 4096
+
+/* Function used to get address information from a domain and port
+ *
+ * Returns a valid addrinfo *, or
+ * 	NULL on failure, prints error to stderr
+ */
+struct addrinfo *ircsock_lookupDomain(IRCSock *ircsock);
+
+/* Function used to extract a string from the internal buffer, returning a
+ * copy of it and deleting it from the buffer
+ *
+ * Returns a valid string owned by the caller, or
+ * 	NULL if there is no string available
+ */
+char *ircsock_fetch(IRCSock *ircsock);
+
 
 IRCSock *ircsock_create(char *host, int port, char *nick) { /*{{{*/
 	IRCSock *ircsock = malloc(sizeof(IRCSock));
@@ -22,7 +39,6 @@ IRCSock *ircsock_create(char *host, int port, char *nick) { /*{{{*/
 	ircsock->host = NULL;
 	ircsock->nick = NULL;
 	ircsock->chan = NULL;
-	ircsock->cbuf = NULL;
 
 	ircsock->host = malloc(strlen(host) + 1);
 	if(!ircsock->host) {
@@ -43,11 +59,8 @@ IRCSock *ircsock_create(char *host, int port, char *nick) { /*{{{*/
 
 	ircsock->socket = -1;
 
-	ircsock->cbuf = cbuffer_create(BLSIZE);
-	if(!ircsock->cbuf) {
-		ircsock_free(ircsock);
-		return NULL;
-	}
+	memset(ircsock->buf, '\0', IRCSOCK_BUF_SIZE);
+	memset(ircsock->wbuf, '\0', IRCSOCK_BUF_SIZE);
 
 	return ircsock;
 } /*}}}*/
@@ -56,59 +69,65 @@ IRCSock *ircsock_create(char *host, int port, char *nick) { /*{{{*/
 void ircsock_free(IRCSock *ircsock) { /*{{{*/
 	if(!ircsock)
 		return;
-	cbuffer_free(ircsock->cbuf);
 	free(ircsock->host);
 	free(ircsock->nick);
 	free(ircsock->chan);
 	free(ircsock);
 } /*}}}*/
 
-/* Function used to get address information from a domain and port
- *
- * Returns NULL on failure, prints error to stderr
- */
-struct addrinfo *ircsock_lookupDomain(IRCSock *ircsock) { /*{{{*/
-	struct addrinfo *result;
-	char sport[BCSIZE];
-	int error;
-
+struct addrinfo *ircsock_lookupDomain(IRCSock *ircsock) { // {{{
+	// if we don't yet have a socket, there is obviously a problem
 	if(ircsock->socket == -1) {
-		fprintf(stderr, "Can't lookup domain: socket is nonexistant\n");
+		fprintf(stderr, "ircsock_lookupDomain: socket is nonexistant\n");
 		return NULL;
 	}
 
+	// get the string version of our port number
+	char sport[BCSIZE];
 	snprintf(sport, BCSIZE, "%d", ircsock->port);
-	error = getaddrinfo(ircsock->host, sport, NULL, &result);
+
+	// try to get the address info
+	struct addrinfo *result;
+	int error = getaddrinfo(ircsock->host, sport, NULL, &result);
+
+	// if we failed, report the error and abort
 	if(error) {
-		fprintf(stderr, "Can't lookup domain: error!\n");
+		fprintf(stderr, "ircsock_lookupDomain: failed lookup domain: %d\n", error);
 		return NULL;
 	}
 
 	return result;
-} /*}}}*/
+} // }}}
 
 int ircsock_connect(IRCSock *ircsock) { // {{{
-	struct addrinfo *result;
-	int error;
-
+	// attempt to create socket
 	ircsock->socket = socket(AF_INET, SOCK_STREAM, 0);
 	if(ircsock->socket == -1)
 		return 1;
 
-	result = ircsock_lookupDomain(ircsock);
+	// set socket to non-blocking mode
+	int ss = fcntl(ircsock->socket, F_GETFL, 0);
+	fcntl(ircsock->socket, F_SETFL, ss | O_NONBLOCK);
+
+	// lookup address info for host
+	struct addrinfo *result = ircsock_lookupDomain(ircsock);
 	if(!result)
 		return 2;
-	error = connect(ircsock->socket, result->ai_addr, result->ai_addrlen);
+
+	// connect to host
+	int error = connect(ircsock->socket, result->ai_addr, result->ai_addrlen);
 	if(error == -1)
 		return 3;
 	freeaddrinfo(result);
 
+	// allocate space for NICK IRC command
 	char *nickc = malloc(16 + strlen(ircsock->nick));
 	if(nickc == NULL) {
 		fprintf(stderr, "ircsock_connect: malloc for nickc failed\n");
 		return IRCSOCK_MERROR;
 	}
 
+	// allocate space for USER IRC command
 	char *userc = malloc(16 + strlen(ircsock->nick) * 2);
 	if(userc == NULL) {
 		fprintf(stderr, "ircsock_connect: malloc for userc failed\n");
@@ -116,36 +135,44 @@ int ircsock_connect(IRCSock *ircsock) { // {{{
 		return IRCSOCK_MERROR;
 	}
 
+	// construct NICK command
 	strcpy(nickc, "NICK ");
 	strcat(nickc, ircsock->nick);
 
+	// construct USER command
 	strcpy(userc, "USER ");
 	strcat(userc, ircsock->nick);
 	strcat(userc, " j j :");
 	strcat(userc, ircsock->nick);
 
+	// send NICK followed by USER
 	ircsock_send(ircsock, nickc);
 	usleep(10000);
 	ircsock_send(ircsock, userc);
 	usleep(10000);
 
-	char *str = NULL;
+	// loop until we receive and error or the connected-go-ahead
 	int done = 0;
 	while(!done) {
-		ircsock_read(ircsock);
-		while((str = cbuffer_pop(ircsock->cbuf)) != NULL) {
+		char *str = ircsock_read(ircsock);
+		// if we recieved a string
+		if(str != NULL) {
+			// if we see nick in use, abort
 			if(strstr(str, " 433 ")) {
 				fprintf(stderr, "ircsock_connect: nick in use!\n");
 				return 433;
 			}
+			// if we recieve the nick invalid message, abort
 			if(strstr(str, " 432 ")) {
 				fprintf(stderr, "ircsock_connect: nick contains illegal charaters\n");
 				return 432;
 			}
+			// if we see the end of motd code, we're in
 			if(strstr(str, " 376 ")) {
 				free(str);
 				return 0;
 			}
+			// respond to PINGs
 			if((str[0] == 'P') && (str[1] == 'I') &&
 				(str[2] == 'N') && (str[3] == 'G') &&
 				(str[4] == ' ') && (str[5] == ':')) {
@@ -153,50 +180,89 @@ int ircsock_connect(IRCSock *ircsock) { // {{{
 				ircsock_send(ircsock, str);
 			}
 			free(str);
+		} else {
+			// if we didn't recieve a string, wait a bit
+			usleep(1000);
 		}
 	}
 
+	// error out (we shouldn't ever get here)
 	return -1;
 } // }}}
 
-ssize_t ircsock_read(IRCSock *ircsock) { /*{{{*/
-	/* We must have enough space for the newline and null character */
-	char buf[BCSIZE + 2];
-	ssize_t ramount;
-	char *str, *tok;
+char *ircsock_fetch(IRCSock *ircsock) { // {{{
+	char *lb = strstr(ircsock->buf, "\r\n");
+	if(lb == NULL)
+		return NULL;
 
-	ramount = read(ircsock->socket, buf, BCSIZE);
-	if(ramount > 0) {
-		buf[ramount] = '\n';
-		buf[ramount + 1] = '\0';
-		tok = strtok(buf, "\r\n");
-		while(tok != NULL) {
-			str = malloc(strlen(tok) + 1);
-			if(!str) {
-				fprintf(stderr, "Failed to allocate memory in ircsock_read!\n");
-				return IRCSOCK_MERROR;
-			}
-			strcpy(str, tok);
-
-			cbuffer_push(ircsock->cbuf, str);
-			tok = strtok(NULL, "\r\n");
-		}
+	size_t llen = lb - ircsock->buf;
+	char *line = calloc(llen + 1, 1);
+	if(!line) {
+		fprintf(stderr, "ircsock_fetch: calloc failure\n");
+		return NULL;
 	}
-	return ramount;
-} /*}}}*/
 
-ssize_t ircsock_send(IRCSock *ircsock, char *str) { /*{{{*/
-	ssize_t wamount = write(ircsock->socket, str, strlen(str));
-	if(wamount < 0)
+	strncpy(line, ircsock->buf, llen);
+	line[llen] = '\0';
+
+	size_t offset = 0;
+	while(offset + 2 + llen < IRCSOCK_BUF_SIZE) {
+		ircsock->buf[offset] = ircsock->buf[offset + llen + 2];
+		offset++;
+	}
+	while(offset < IRCSOCK_BUF_SIZE)
+		ircsock->buf[offset++] = '\0';
+
+	return line;
+} // }}}
+
+char *ircsock_read(IRCSock *ircsock) { // {{{
+	size_t blen = strlen(ircsock->buf);
+	char *line = ircsock_fetch(ircsock);
+	if(line != NULL)
+		return line;
+
+	ssize_t ramount = read(ircsock->socket, ircsock->buf + blen,
+			IRCSOCK_BUF_SIZE - blen);
+	if((ramount < 0) && ((errno == EAGAIN) || (errno == EWOULDBLOCK)))
+		return NULL;
+	if(ramount < 0) {
+		perror("ircsock_read");
+		return NULL;
+	}
+
+	line = ircsock_fetch(ircsock);
+	if(line != NULL)
+		return line;
+} // }}}
+
+ssize_t ircsock_send(IRCSock *ircsock, char *str) { // {{{
+	size_t slen = strlen(str), wblen = strlen(ircsock->wbuf);
+	if(wblen + slen + 2 >= IRCSOCK_BUF_SIZE) {
+		fprintf(stderr, "ircsock_send: cannot cat str to wbuf, no space\n");
+		return -1;
+	}
+
+	strcat(ircsock->wbuf, str);
+	strcat(ircsock->wbuf, "\r\n");
+	wblen += slen + 2;
+
+	ssize_t wamount = write(ircsock->socket, ircsock->wbuf, wblen);
+	if((wamount < 0) && ((errno == EAGAIN) || (errno == EWOULDBLOCK)))
+		return 0;
+
+	if(wamount < 0) {
+		perror("ircsock_send");
 		return wamount;
-	wamount += write(ircsock->socket, "\r\n", 2);
+	}
+
 	return wamount;
-} /*}}}*/
+} // }}}
 
 ssize_t ircsock_pmsg(IRCSock *ircsock, char *target, char *msg) { /*{{{*/
 	char *buf = malloc(strlen(msg) + strlen("PRIVMSG ") + strlen(target) + 3);
 	if(!buf) {
-		fprintf(stderr, "Failed to malloc in irsock_pmsg!\n");
+		fprintf(stderr, "ircsock_pmsg: malloc failed\n");
 		return IRCSOCK_MERROR;
 	}
 	strcpy(buf, "PRIVMSG ");
@@ -232,11 +298,10 @@ int ircsock_join(IRCSock *ircsock, char *chan) { /*{{{*/
 
 	ircsock_send(ircsock, joinc);
 
-	char *str = NULL;
 	int done = 0;
 	while(!done) {
-		ircsock_read(ircsock);
-		while((str = cbuffer_pop(ircsock->cbuf)) != NULL) {
+		char *str = ircsock_read(ircsock);
+		if(str != NULL) {
 			if(strstr(str, " 332 ") || strstr(str, " JOIN ")) {
 				free(str);
 				return 0;
@@ -248,10 +313,13 @@ int ircsock_join(IRCSock *ircsock, char *chan) { /*{{{*/
 				ircsock_send(ircsock, str);
 			}
 			free(str);
+		} else {
+			// if we didn't recieve a string, wait a bit
+			usleep(1000);
 		}
 	}
 
-	return 0;
+	return -1;
 } /*}}}*/
 
 int ircsock_quit(IRCSock *ircsock) { /*{{{*/
