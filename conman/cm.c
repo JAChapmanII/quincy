@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 
 #include "ircsock.h"
 
@@ -10,13 +13,18 @@
 #define DEFAULT_PORT    6667
 #define DEFAULT_CHAN   "#zebra"
 #define DEFAULT_BINARY "quincy"
+#define BUF_SIZE 4096
 
 int closePipe(int *fds);
 int fileExists(char *fileName);
 int subprocessPipe(char *binary, char **argv, int *fds);
 
+int setNonBlocking(int fd);
+int readReady(int fd);
+char *fetch(char *buf, size_t bufSize, char *split);
+
 int closePipe(int *fds) { // {{{
-	int f1 = close(fds[0]), f2 = close(fds[2]);
+	int f1 = close(fds[0]), f2 = close(fds[1]);
 	return f1 || f2;
 } // }}}
 int fileExists(char *fileName) { // {{{
@@ -55,9 +63,11 @@ int subprocessPipe(char *binary, char **argv, int *fds) { // {{{
 
 	// if we're the child, execv the binary
 	if(pid == 0) {
+		close(0);
 		dup2(left[0], 0);
 		closePipe(left);
 
+		close(1);
 		dup2(right[1], 1);
 		closePipe(right);
 
@@ -71,6 +81,51 @@ int subprocessPipe(char *binary, char **argv, int *fds) { // {{{
 	fds[0] = right[0];
 	fds[1] = left[1];
 	return 0;
+} // }}}
+
+int setNonBlocking(int fd) { // {{{
+	int ss = fcntl(fd, F_GETFL, 0);
+	return fcntl(fd, F_SETFL, ss | O_NONBLOCK);
+} // }}}
+int readReady(int fd) { // {{{
+	fprintf(stderr, "readReady: start\n");
+	fd_set rset;
+	FD_ZERO(&rset);
+	FD_SET(fd, &rset);
+
+	fprintf(stderr, "readReady: end\n");
+	int count = select(fd + 1, &rset, NULL, NULL, NULL);
+	if(count < 0) {
+		perror("readReady");
+		return 0;
+	}
+	fprintf(stderr, "readReady: back\n");
+	return FD_ISSET(fd, &rset);
+} // }}}
+char *fetch(char *buf, size_t bufSize, char *split) { // {{{
+	char *lb = strstr(buf, split);
+	if(lb == NULL)
+		return NULL;
+
+	size_t llen = lb - buf;
+	char *line = calloc(llen + 1, 1);
+	if(!line) {
+		fprintf(stderr, "fetch: calloc failure\n");
+		return NULL;
+	}
+
+	strncpy(line, buf, llen);
+	line[llen] = '\0';
+
+	size_t offset = 0, splen = strlen(split);
+	while(offset + splen + llen < bufSize) {
+		buf[offset] = buf[offset + llen + splen];
+		offset++;
+	}
+	while(offset < bufSize)
+		buf[offset++] = '\0';
+
+	return line;
 } // }}}
 
 int main(int argc, char **argv) {
@@ -87,6 +142,18 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "main: %s: file does not exist\n", binary);
 		return 1;
 	}
+
+	printf("Creating subprocess...\n");
+	int fds[2] = { 0 };
+	if(subprocessPipe(binary, argv, fds) != 0) {
+		fprintf(stderr, "main: couldn't create subprocess pipe to: %s\n", binary);
+		return 5;
+	}
+	usleep(10000);
+	setNonBlocking(fds[0]);
+	if(errno)
+		perror("main");
+	FILE *out = fdopen(fds[1], "w");
 
 	printf("Creating isock...\n");
 	IRCSock *isock = ircsock_create(server, port, nick);
@@ -105,17 +172,14 @@ int main(int argc, char **argv) {
 		return 4;
 	}
 
-	int fds[2] = { 0 };
-	if(subprocessPipe(binary, argv, fds) != 0) {
-		fprintf(stderr, "main: couldn't create subprocess pipe to: %s\n", binary);
-		return 5;
-	}
-	FILE *in = fdopen(fds[0], "r"), *out = fdopen(fds[1], "w");
+	char buf[BUF_SIZE] = { 0 };
+	int done = 0;
+	while(!done) {
+		int didSomething = 0;
 
-	char buf[4096] = { 0 };
-	while(!feof(in)) {
-		char *str = ircsock_read(isock);
-		if(str != NULL) {
+		char *str = NULL;
+		while((str = ircsock_read(isock)) != NULL) {
+			didSomething = 1;
 			if((str[0] == 'P') && (str[1] == 'I') &&
 				(str[2] == 'N') && (str[3] == 'G') &&
 				(str[4] == ' ') && (str[5] == ':')) {
@@ -124,23 +188,34 @@ int main(int argc, char **argv) {
 				free(str);
 				str = NULL;
 			}
-		}
-		if(str != NULL) {
-			fprintf(out, "%s\n", str);
-			free(str);
+
+			if(str != NULL) {
+				fprintf(out, "%s\n", str);
+				fflush(out);
+				free(str);
+			}
 		}
 
-		if(fgets(buf, 4096 - 1, in) == buf)
-			printf("%s", buf);
+		size_t blen = strlen(buf);
+		ssize_t ramount = read(fds[0], buf + blen, BUF_SIZE - blen);
+		if(ramount < 0) {
+			if(!((errno == EAGAIN) || (errno == EWOULDBLOCK)))
+				perror("ircsock_read");
+		} else if(ramount == 0) {
+			; // TODO: handle EOF from subproc
+		} else {
+			didSomething = 1;
+			char *line = NULL;
+			while((line = fetch(buf, BUF_SIZE, "\n")) != NULL) {
+				ircsock_send(isock, line);
+				free(line);
+			}
+		}
+
+		if(!didSomething)
+			usleep(1000);
 	}
 	closePipe(fds);
-
-
-
-	printf("Sending pmsg...\n");
-	ircsock_pmsg(isock, "#zebra", "Hello, there!");
-	for(int i = 0; i < 3; ++i)
-		usleep(1000*1000);
 
 	printf("Quiting...\n");
 	ircsock_quit(isock);
