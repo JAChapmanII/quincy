@@ -7,18 +7,29 @@
 
 #define DEFAULT_SERVER "irc.freenode.net"
 #define DEFAULT_NICK   "quincy"
-#define DEFAULT_PORT   6667
+#define DEFAULT_PORT    6667
 #define DEFAULT_CHAN   "#zebra"
 
 int closePipe(int *fds);
+int fileExists(char *fileName);
 int subprocessPipe(char *binary, char **argv, int *fds);
 
-int subprocessPipe(char *binary, char **argv, int *fds) {
-	// if we can't open the binary, abort
-	FILE *bin = fopen(binary, "rb");
+int closePipe(int *fds) { // {{{
+	int f1 = close(fds[0]), f2 = close(fds[2]);
+	return f1 || f2;
+} // }}}
+int fileExists(char *fileName) { // {{{
+	FILE *bin = fopen(fileName, "rb");
 	if(bin == NULL)
-		return -1;
+		return 0;
 	fclose(bin);
+	return 1;
+} // }}}
+
+int subprocessPipe(char *binary, char **argv, int *fds) { // {{{
+	// if the binary doesn't exist, abort
+	if(!fileExists(binary))
+		return -1;
 	argv[0] = binary;
 
 	int left[2] = { 0 }, right[2] = { 0 };
@@ -59,12 +70,7 @@ int subprocessPipe(char *binary, char **argv, int *fds) {
 	fds[0] = right[0];
 	fds[1] = left[1];
 	return 0;
-}
-
-int closePipe(int *fds) {
-	int f1 = close(fds[0]), f2 = close(fds[2]);
-	return f1 || f2;
-}
+} // }}}
 
 int main(int argc, char **argv) {
 	char *server = (argc > 1) ? argv[1] : DEFAULT_SERVER,
