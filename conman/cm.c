@@ -1,12 +1,70 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <unistd.h>
+
 #include "ircsock.h"
 
 #define DEFAULT_SERVER "irc.freenode.net"
 #define DEFAULT_NICK   "quincy"
 #define DEFAULT_PORT   6667
 #define DEFAULT_CHAN   "#zebra"
+
+int closePipe(int *fds);
+int subprocessPipe(char *binary, char **argv, int *fds);
+
+int subprocessPipe(char *binary, char **argv, int *fds) {
+	// if we can't open the binary, abort
+	FILE *bin = fopen(binary, "rb");
+	if(bin == NULL)
+		return -1;
+	fclose(bin);
+	argv[0] = binary;
+
+	int left[2] = { 0 }, right[2] = { 0 };
+	// if we can't create the left pipe, abort
+	int fail = pipe(left);
+	if(fail)
+		return fail;
+	// if we can't create the right pipe, abort
+	fail = pipe(right);
+	if(fail) {
+		closePipe(left);
+		return fail;
+	}
+
+	// if we can't fork, abort
+	pid_t pid = fork();
+	if(pid == -1) {
+		closePipe(left);
+		closePipe(right);
+		return -2;
+	}
+
+	// if we're the child, execv the binary
+	if(pid == 0) {
+		dup2(left[0], 0);
+		closePipe(left);
+
+		dup2(right[1], 1);
+		closePipe(right);
+
+		execv(binary, argv);
+		return -99;
+	}
+
+	// if we're main, close uneeded ends and copy fds
+	close(left[0]);
+	close(right[1]);
+	fds[0] = right[0];
+	fds[1] = left[1];
+	return 0;
+}
+
+int closePipe(int *fds) {
+	int f1 = close(fds[0]), f2 = close(fds[2]);
+	return f1 || f2;
+}
 
 int main(int argc, char **argv) {
 	char *server = (argc > 1) ? argv[1] : DEFAULT_SERVER,
@@ -17,6 +75,18 @@ int main(int argc, char **argv) {
 		port = atoi(argv[4]);
 		port = (port == 0) ? DEFAULT_PORT : port;
 	}
+
+	int fds[2] = { 0 };
+	if(subprocessPipe("/bin/echo", argv, fds) != 0) {
+		fprintf(stderr, "main: couldn't invoke echo\n");
+	}
+	char buf[4096];
+	FILE *in = fdopen(fds[0], "r");
+	while(!feof(in)) {
+		if(fgets(buf, 4096 - 1, in) == buf)
+			printf("%s", buf);
+	}
+	closePipe(fds);
 
 	printf("Creating isock...\n");
 	IRCSock *isock = ircsock_create(server, port, nick);
