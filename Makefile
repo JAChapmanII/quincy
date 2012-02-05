@@ -1,4 +1,5 @@
 SDIR=src
+LDIR=lib
 ODIR=obj
 BDIR=.
 
@@ -11,7 +12,9 @@ MOBJS=$(ODIR)/ircsock.o
 FOBJS=$(ODIR)/status.o $(ODIR)/module.o
 
 LDFLAGS=-pthread
-CFLAGS=-std=c99 -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE -pedantic -Wall -Wextra
+CFLAGS=-std=c99 -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE
+CFLAGS+=-pedantic -Wall -Wextra
+CFLAGS+=-I$(LDIR)
 
 ifndef RELEASE
 CFLAGS+=-g
@@ -37,13 +40,15 @@ modules/%: $(ODIR)/%.o $(FOBJS)
 
 $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
+$(ODIR)/%.o: $(LDIR)/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 $(ODIR)/%.o: conman/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 $(ODIR)/%.o: modules/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 map/%: map/%.def map/%.dec map/%.def
-	$(BDIR)/mstruct.sh $< map $(SDIR)
+	$(BDIR)/mstruct.sh $< map $(LDIR)
 
 clean:
 	rm -f $(ODIR)/*.o $(BINS)

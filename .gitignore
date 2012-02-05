@@ -2,7 +2,7 @@ quincy
 cm
 *.o
 
-src/ismap.?
-src/simap.?
-src/vmap.?
+lib/ismap.?
+lib/simap.?
+lib/vmap.?
 
