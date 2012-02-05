@@ -11,6 +11,6 @@
 
 #define EREGEX_ERROR  40
 
-int moduleError(int statusCode, int errorCode = 0);
+int moduleError(int statusCode, int errorCode);
 
 #endif // STATUS_H
