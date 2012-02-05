@@ -11,5 +11,5 @@ unignore  = unignore\s(\w+)
 comprefix = (^!|^~|^\.|quincy[:,]\s*)
 
 [modules]
-wave    = (o/|\\o)
+wave = global
 
