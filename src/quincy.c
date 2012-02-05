@@ -1,21 +1,72 @@
 #include <stdio.h>
 #include <string.h>
+#include <pcre.h>
 
 #include "vmap.h"
-#include "simap.h"
-#include "ismap.h"
+#include "conf.h"
 
 #define BUF_SIZE 4096
 
 int main(int argc, char **argv) {
-	fprintf(stderr, "quincy: 0.0a\n");
+	conf_parseArguments(argv, argc);
+	conf_read(NULL);
+	char *nick = conf_nick(), *chan = conf_chan();
 
-	VMap *vmap = vmap_create();
-	if(!vmap) {
-		fprintf(stderr, "main: failed to create vmap\n");
-		return -1;
+	fprintf(stderr, "quincy: 0.0a\n");
+	fprintf(stderr, "quincy: { %s, %s }\n", nick, chan);
+
+	VMap *confMap = conf_map();
+	if(confMap == NULL) {
+		confMap = vmap_create();
+		if(confMap == NULL) {
+			fprintf(stderr, "quincy: unable to create vmap\n");
+			return 1;
+		}
 	}
 
+	const char *errorMessage = NULL;
+	int errorOffset = 0;
+
+	VMap_Node *vmapn = vmap_find(confMap, "irc.pmsg");
+	if(vmapn == NULL) {
+		fprintf(stderr, "quincy: unable to find pmsg regex\n");
+		return 2;
+	}
+	pcre *pmsg = pcre_compile(vmapn->val, 0,
+			&errorMessage, &errorOffset, NULL);
+	if(pmsg == NULL) {
+		fprintf(stderr, "quincy: error creating pmsg pcre object: %d: %s\n",
+				errorOffset, errorMessage);
+		return 3;
+	}
+
+	vmapn = vmap_find(confMap, "irc.join");
+	if(vmapn == NULL) {
+		fprintf(stderr, "quincy: unable to find join regex\n");
+		return 2;
+	}
+	pcre *join = pcre_compile(vmapn->val, 0,
+			&errorMessage, &errorOffset, NULL);
+	if(join == NULL) {
+		fprintf(stderr, "quincy: error creating pmsg pcre object: %d: %s\n",
+				errorOffset, errorMessage);
+		return 3;
+	}
+
+	vmapn = vmap_find(confMap, "irc.quit");
+	if(vmapn == NULL) {
+		fprintf(stderr, "quincy: unable to find quit regex\n");
+		return 2;
+	}
+	pcre *quit = pcre_compile(vmapn->val, 0,
+			&errorMessage, &errorOffset, NULL);
+	if(join == NULL) {
+		fprintf(stderr, "quincy: error creating quit pcre object: %d: %s\n",
+				errorOffset, errorMessage);
+		return 3;
+	}
+
+	time_t responseTimes[3] = { 0 };
 	char buf[BUF_SIZE] = { 0 };
 	while(!feof(stdin)) {
 		if(fgets(buf, BUF_SIZE, stdin) == buf) {

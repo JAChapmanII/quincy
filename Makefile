@@ -8,8 +8,9 @@ TESTS=$(BDIR)/conftest
 MAPS=map/vmap map/simap map/ismap
 MODULES=modules/wave modules/love
 
-QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(ODIR)/util.o
-MOBJS=$(ODIR)/ircsock.o $(ODIR)/conf.o $(ODIR)/vmap.o $(ODIR)/util.o
+COBJS=$(ODIR)/util.o $(ODIR)/conf.o
+QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(COBJS)
+MOBJS=$(ODIR)/ircsock.o $(ODIR)/vmap.o $(COBJS)
 FOBJS=$(ODIR)/status.o $(ODIR)/module.o
 
 LDFLAGS=-pthread
@@ -36,7 +37,7 @@ dirs:
 	mkdir -p $(SDIR) $(LDIR) $(ODIR) $(BDIR)
 
 $(BDIR)/quincy: $(ODIR)/quincy.o $(QOBJS)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) $(LDFLAGS) -o $@ $^ -lpcre
 $(BDIR)/cm: $(ODIR)/cm.o $(MOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 $(BDIR)/conftest: $(ODIR)/conftest.o $(MOBJS)
