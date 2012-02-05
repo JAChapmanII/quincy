@@ -5,6 +5,11 @@ port   = 6667
 chan   = #zebra
 binary = quincy
 
+[irc]
+pmsg = :([^!]+)(?:!(\S+))?\s+PRIVMSG\s+(\S+)\s+:(.+)
+join = :([^!]+)(?:!(\S+))?\s+JOIN\s+(.+)
+quit = :([^!]+)(?:!(\S+))?\s+QUIT\s+(?:?(.+))?
+
 [quincy]
 ignore    = ignore\s+(\w+)
 unignore  = unignore\s(\w+)
@@ -12,4 +17,5 @@ comprefix = (^!|^~|^\.|quincy[:,]\s*)
 
 [modules]
 wave = global
+love = tome,sol
 
