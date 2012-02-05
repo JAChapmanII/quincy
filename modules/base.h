@@ -1,17 +1,18 @@
 #ifndef BASE_H
 #define BASE_H
 
-char *userNick  = NULL;
-char *userHMask = NULL;
-char *target    = NULL;
-char *message   = NULL;
+char *userNick;
+char *userHMask;
+char *target;
+char *message;
 
 int moduleInit(void);
 int moduleCleanup(void);
 
 char **moduleNames(void);
 char **moduleRegex(void);
-char *moduleHelp(const char *module);
+char *moduleHelp(int module);
+
 char *dispatch(int module);
 
 #endif // BASE_H

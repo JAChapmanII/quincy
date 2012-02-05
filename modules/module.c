@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include <pcre.h>
 #include "base.h"
 #include "status.h"
@@ -15,23 +16,23 @@ int main(int argc, char **argv) {
 	int moduleCount = 0;
 	char **names = moduleNames();
 	if(names == NULL) {
-		return moduleError(ENULL_NAMES);
+		return moduleError(ENULL_NAMES, 0);
 	}
 	for(moduleCount = 0; names[moduleCount] != NULL; ++moduleCount)
 		; // count modules
 	if(moduleCount < 1) {
-		return moduleError(ENO_MODULES);
+		return moduleError(ENO_MODULES, 0);
 	}
 
 	int regexCount = 0;
 	char **regex = moduleRegex();
 	if(regex == NULL) {
-		return moduleError(ENULL_REGEX);
+		return moduleError(ENULL_REGEX, 0);
 	}
 	for(regexCount = 0; regex[regexCount] != NULL; ++regexCount)
 		; // count regex
 	if(regexCount != moduleCount) {
-		return moduleError(EMODNEREGEX);
+		return moduleError(EMODNEREGEX, 0);
 	}
 
 	char *command = argv[1];
@@ -47,8 +48,12 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 		char *module = argv[2];
-		char *help = moduleHelp(module);
-		if((help == NULL) || (wstrlen(help) == 0)) {
+		int modnum = 0;
+		for(modnum = 0; modnum < moduleCount; ++modnum)
+			if(strcmp(module, names[modnum]) == 0)
+				break;
+		char *help = moduleHelp(modnum);
+		if((help == NULL) || (strlen(help) == 0)) {
 			printf("%s: no help available\n", module);
 		} else {
 			printf("%s: %s\n", module, help);
@@ -84,10 +89,4 @@ int main(int argc, char **argv) {
 	}
 	return SUCCESS;
 }
-
-char **moduleNames(void);
-char **moduleRegex(void);
-char *moduleHelp(const char *module);
-char *dispatch(int module);
-
 
