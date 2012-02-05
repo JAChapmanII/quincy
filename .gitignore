@@ -1,5 +1,6 @@
 quincy
 cm
+conftest
 *.o
 
 lib/defines.h

@@ -62,8 +62,13 @@ void conf_read(const char *file) {
 			break;
 		size_t len = strlen(buf);
 		buf[--len] = '\0';
-		fprintf(stderr, "read: \"%s\"\n", buf);
-		if((buf[0] == '[') && (buf[len - 1] == ']')) {
+		if(buf[0] == '#') {
+			// a comment line
+			continue;
+		} else if(len == 0) {
+			// a blank line
+			continue;
+		} else if((buf[0] == '[') && (buf[len - 1] == ']')) {
 			strncpy(scope, buf + 1, len - 2);
 			scope_len = len - 2;
 			scope[scope_len] = '\0';
