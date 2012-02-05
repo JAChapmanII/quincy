@@ -281,7 +281,7 @@ int ${VNAME}_load(${NAME} *${VNAME}, FILE *inFile) { // {{{
 	if(!${VNAME} || !inFile)
 		return -1;
 
-	size_t size = readSizeT(inFile);
+	size_t size = util_readSizeT(inFile);
 	if(size == 0)
 		return -2;
 
@@ -353,7 +353,7 @@ int ${VNAME}_write(${NAME} *${VNAME}, FILE *outFile) { // {{{
 	if(size < 1)
 		return 0;
 
-	if(writeSizeT(outFile, size) != sizeof(size_t))
+	if(util_writeSizeT(outFile, size) != sizeof(size_t))
 		return -128;
 
 	int count = ${VNAME}n_dump(${VNAME}->root, outFile);
