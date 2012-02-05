@@ -6,7 +6,7 @@ BDIR=.
 BINS=$(BDIR)/quincy $(BDIR)/cm
 TESTS=$(BDIR)/conftest
 MAPS=map/vmap map/simap map/ismap
-MODULES=modules/wave
+MODULES=modules/wave modules/love
 
 QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(ODIR)/util.o
 MOBJS=$(ODIR)/ircsock.o $(ODIR)/conf.o $(ODIR)/vmap.o $(ODIR)/util.o
@@ -28,8 +28,10 @@ CFLAGS+=-pg
 LDFLAGS+=-pg
 endif
 
-all: dirs $(MAPS) $(MODULES) $(BINS)
-tests: $(TESTS)
+all: dirs maps modules $(BINS)
+maps:    $(MAPS)
+modules: $(MODULES)
+tests:   $(TESTS)
 dirs:
 	mkdir -p $(SDIR) $(LDIR) $(ODIR) $(BDIR)
 
