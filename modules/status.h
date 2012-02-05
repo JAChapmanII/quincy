@@ -11,6 +11,7 @@
 
 #define EREGEX_ERROR  40
 
+// Print an error message based on statusCode and possibly errorCode
 int moduleError(int statusCode, int errorCode);
 
 #endif // STATUS_H
