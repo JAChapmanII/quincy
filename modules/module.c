@@ -4,6 +4,23 @@
 #include "base.h"
 #include "status.h"
 
+/* This is a predifined main that should be useful for potential modules. The
+ * module binaries are called by the quincy binary, so the arguments will come
+ * frome it.
+ *
+ * The first argument is taken to be a particular function:
+ * 	names: return a list of function names available here
+ * 	regex: return a list of corresponding regex
+ * 	help: return the help string for a particular module
+ * 		the second argument here is the function name
+ * 	test: try to compile all regex objects to see if any errors arise
+ * 	dispatch: run a particular module function
+ * 		2nd argument: user nick
+ * 		3rd argument: user host mask
+ * 		4th argument: target of PRIVMSG
+ * 		5th argument: message portion of PRIVMSG
+ */
+
 int main(int argc, char **argv) {
 	if(argc < 2)
 		return 0;
