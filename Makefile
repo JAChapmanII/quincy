@@ -2,11 +2,12 @@ SDIR=src
 LDIR=lib
 ODIR=obj
 BDIR=.
+MBDIR=mbin
 
 BINS=$(BDIR)/quincy $(BDIR)/cm
 TESTS=$(BDIR)/conftest
 MAPS=map/vmap map/simap map/ismap
-MODULES=modules/wave modules/love
+MODULES=$(MBDIR)/wave $(MBDIR)/love
 
 COBJS=$(ODIR)/util.o $(ODIR)/conf.o
 QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(COBJS)
@@ -34,7 +35,7 @@ maps:    $(MAPS)
 modules: $(MODULES)
 tests:   $(TESTS)
 dirs:
-	mkdir -p $(SDIR) $(LDIR) $(ODIR) $(BDIR)
+	mkdir -p $(SDIR) $(LDIR) $(ODIR) $(BDIR) $(MBDIR)
 
 $(BDIR)/quincy: $(ODIR)/quincy.o $(QOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ -lpcre
@@ -42,7 +43,7 @@ $(BDIR)/cm: $(ODIR)/cm.o $(MOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 $(BDIR)/conftest: $(ODIR)/conftest.o $(MOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
-modules/%: $(ODIR)/%.o $(FOBJS)
+$(MBDIR)/%: $(ODIR)/%.o $(FOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ -lpcre
 
 $(ODIR)/%.o: $(SDIR)/%.c

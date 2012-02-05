@@ -1,6 +1,7 @@
 quincy
 cm
 conftest
+mbin/*
 *.o
 
 lib/defines.h

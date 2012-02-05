@@ -14,7 +14,7 @@ quit = ^:([^!]+)(?:!(\S+))?\s+QUIT\s+(?:?(.+))?$
 ignore    = ignore\s+(\w+)
 unignore  = unignore\s(\w+)
 comprefix = (^!|^~|^\.|quincy[:,]\s*)
-moduledir = modules
+moduledir = mbin
 
 [modules]
 wave = global
