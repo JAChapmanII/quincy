@@ -1,8 +1,7 @@
 #include <string.h>
+#include <pcre.h>
 #include "base.h"
 #include "status.h"
-
-INCLUDE_LINE
 
 int main(int argc, char **argv) {
 	if(argc < 2)
