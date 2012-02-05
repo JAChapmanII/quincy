@@ -58,6 +58,22 @@ int main(int argc, char **argv) {
 		} else {
 			printf("%s: %s\n", module, help);
 		}
+	} else if(strcmp(command, "test") == 0) {
+		for(int module = 0; module < regexCount; ++module) {
+			const char *errorMessage = NULL;
+			int errorOffset = 0, retval = 0;
+			pcre *re = pcre_compile(regex[module], 0,
+					&errorMessage, &errorOffset, NULL);
+			if(re == NULL) {
+				fprintf(stderr, "module: regex error \"%s\"@%d: %s\n",
+						regex[module], errorOffset, errorMessage);
+				retval = EREGEX_ERROR;
+			}
+			if(retval == 0) {
+				printf("module: no regex errors\n");
+			}
+			return retval;
+		}
 	} else if(strcmp(command, "dispatch") == 0) {
 		if(argc != 6) {
 			fprintf(stderr, "module: error: dispatch takes preparsed message\n");
@@ -71,10 +87,10 @@ int main(int argc, char **argv) {
 		for(int module = 0; module < regexCount; ++module) {
 			const char *errorMessage = NULL;
 			int errorOffset = 0;
-			pcre *re = pcre_compile(regex[module], 0, &errorMessage, &errorOffset,
-					NULL);
+			pcre *re = pcre_compile(regex[module], 0,
+					&errorMessage, &errorOffset, NULL);
 			if(re == NULL) {
-				fprintf(stderr, "module: error compliing regex, %d: %s\n",
+				fprintf(stderr, "module: error compiling regex, %d: %s\n",
 						errorOffset, errorMessage);
 				return EREGEX_ERROR;
 			}
