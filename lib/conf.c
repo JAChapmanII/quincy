@@ -114,17 +114,18 @@ void conf_read(const char *file) {
 char *conf_server(void) {
 	return m_server;
 }
+int conf_port(void) {
+	return m_port;
+}
+
 char *conf_nick(void) {
 	return m_nick;
 }
 char *conf_chan(void) {
 	return m_chan;
 }
+
 char *conf_binary(void) {
 	return m_binary;
 }
-int conf_port(void) {
-	return m_port;
-}
-
 
