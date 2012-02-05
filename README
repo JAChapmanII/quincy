@@ -1,0 +1,72 @@
+quincy is a modular IRC bot written in C. It will hopefully be better
+organized than my other bot, as I've learned quite a bit.
+
+Building:
+	First create the defines.h file:
+		cp lib/defines.h{.def,}
+	If you'd like to change compile time defaults, do it now.
+
+	Next build the connection manager and the quincy binary:
+		make
+
+	If you would like to be able to mess around with the provided tests, run:
+		make tests
+	as well
+
+Running:
+	If you have not already configured quincy, see the configuration section
+	below. Otherwise, it is fairly simple:
+		./cm [options]
+
+Configuration:
+	The configuration is handled in three stages, values defined in the later
+	ones overriding the ones defined previously.
+		compile time values from (lib/defines.h)
+		values read from the configuration file (defaults to quincyrc)
+		values specified on the command line
+
+	The compile time constants should only be messed with if you have good
+	reason, such as wanting to run the binary without any configuration file or
+	command line options. The are standard C preprocessor defines.
+
+	The quincyrc file is modeled after how I believe git's config works. There
+	is probably a library for this, but I made my own so I get all the quirks I
+	love and desire ;) There are 4 types of lines, all else being invalid:
+		lines starting with #, that is comment lines. These are ignored.
+		blank lines, these are ignored.
+		lines matching \[[^\]]*\], these define a new scope (the default being
+			the core scope). All variables in the configuration map are prefixed
+			with their scope.
+		lines matching (\S+) = (\S+), which define variables and their values
+
+	Here is a brief example (ignore leading spaces):
+		[my_scope]
+		my_super_variable = my_secret_value
+	Creates, when read, a string -> string map containing the sole entry:
+		"my_scope.my_super_variable": "my_secret_value"
+
+	The final method for specifying values is on the command line. This method
+	is currently being worked on, so this may be out of date. Currently it
+	works based on the position of the argument like this:
+		1st: the server to connect to
+		2nd: the nick to use
+		3rd: the channel to connect to
+		4th: the binary to run (e.g.: quincy)
+		5th: the port to connect to
+	Eventually it should work with actual switches.
+
+Important variables:
+	Eventually this will contain information regarding what needs to be set in
+	quincyrc and how the value is interpreted. Until then, take a guess, read
+	the code, or send me a message.
+
+Extending:
+	All modules currently reside in the modules/ directory. To create a new
+	module, copy the base.c file and reimplement the contained functions.
+	Eventually the base.h file will contain comments letting you know what they
+	should do ;)
+
+	To get the module into the build system, simply append
+		modules/module_name
+	(notice the lack of .c), to the MODULES array in the Makefile.
+
