@@ -3,7 +3,8 @@ LDIR=lib
 ODIR=obj
 BDIR=.
 
-BINS=$(BDIR)/quincy $(BDIR)/cm $(BDIR)/conftest
+BINS=$(BDIR)/quincy $(BDIR)/cm
+TESTS=$(BDIR)/conftest
 MAPS=map/vmap map/simap map/ismap
 MODULES=modules/wave
 
@@ -28,8 +29,9 @@ LDFLAGS+=-pg
 endif
 
 all: dirs $(MAPS) $(MODULES) $(BINS)
+tests: $(TESTS)
 dirs:
-	mkdir -p $(SDIR) $(ODIR) $(BDIR)
+	mkdir -p $(SDIR) $(LDIR) $(ODIR) $(BDIR)
 
 $(BDIR)/quincy: $(ODIR)/quincy.o $(QOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
@@ -55,5 +57,5 @@ map/%: map/%.def map/%.dec map/%.def
 	$(BDIR)/mstruct.sh $< map $(LDIR)
 
 clean:
-	rm -f $(ODIR)/*.o $(BINS)
+	rm -f $(ODIR)/*.o $(BINS) $(TESTS)
 
