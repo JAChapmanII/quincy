@@ -2,7 +2,6 @@
 #define IRCSOCK_H
 
 #include <sys/types.h>
-#include "cbuffer.h"
 
 #define IRCSOCK_MERROR   -2
 #define IRCSOCK_BUF_SIZE 4096
