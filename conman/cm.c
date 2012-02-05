@@ -7,122 +7,10 @@
 #include <errno.h>
 
 #include "ircsock.h"
+#include "util.h"
 #include "conf.h"
 
 #define BUF_SIZE 4096
-
-int closePipe(int *fds);
-int fileExists(char *fileName);
-int subprocessPipe(char *binary, char **argv, int *fds);
-
-int setNonBlocking(int fd);
-int readReady(int fd);
-char *fetch(char *buf, size_t bufSize, char *split);
-
-int closePipe(int *fds) { // {{{
-	int f1 = close(fds[0]), f2 = close(fds[1]);
-	return f1 || f2;
-} // }}}
-int fileExists(char *fileName) { // {{{
-	FILE *bin = fopen(fileName, "rb");
-	if(bin == NULL)
-		return 0;
-	fclose(bin);
-	return 1;
-} // }}}
-
-int subprocessPipe(char *binary, char **argv, int *fds) { // {{{
-	// if the binary doesn't exist, abort
-	if(!fileExists(binary))
-		return -1;
-	argv[0] = binary;
-
-	int left[2] = { 0 }, right[2] = { 0 };
-	// if we can't create the left pipe, abort
-	int fail = pipe(left);
-	if(fail)
-		return fail;
-	// if we can't create the right pipe, abort
-	fail = pipe(right);
-	if(fail) {
-		closePipe(left);
-		return fail;
-	}
-
-	// if we can't fork, abort
-	pid_t pid = fork();
-	if(pid == -1) {
-		closePipe(left);
-		closePipe(right);
-		return -2;
-	}
-
-	// if we're the child, execv the binary
-	if(pid == 0) {
-		close(0);
-		dup2(left[0], 0);
-		closePipe(left);
-
-		close(1);
-		dup2(right[1], 1);
-		closePipe(right);
-
-		execv(binary, argv);
-		return -99;
-	}
-
-	// if we're main, close uneeded ends and copy fds
-	close(left[0]);
-	close(right[1]);
-	fds[0] = right[0];
-	fds[1] = left[1];
-	return 0;
-} // }}}
-
-int setNonBlocking(int fd) { // {{{
-	int ss = fcntl(fd, F_GETFL, 0);
-	return fcntl(fd, F_SETFL, ss | O_NONBLOCK);
-} // }}}
-int readReady(int fd) { // {{{
-	fprintf(stderr, "readReady: start\n");
-	fd_set rset;
-	FD_ZERO(&rset);
-	FD_SET(fd, &rset);
-
-	fprintf(stderr, "readReady: end\n");
-	int count = select(fd + 1, &rset, NULL, NULL, NULL);
-	if(count < 0) {
-		perror("readReady");
-		return 0;
-	}
-	fprintf(stderr, "readReady: back\n");
-	return FD_ISSET(fd, &rset);
-} // }}}
-char *fetch(char *buf, size_t bufSize, char *split) { // {{{
-	char *lb = strstr(buf, split);
-	if(lb == NULL)
-		return NULL;
-
-	size_t llen = lb - buf;
-	char *line = calloc(llen + 1, 1);
-	if(!line) {
-		fprintf(stderr, "fetch: calloc failure\n");
-		return NULL;
-	}
-
-	strncpy(line, buf, llen);
-	line[llen] = '\0';
-
-	size_t offset = 0, splen = strlen(split);
-	while(offset + splen + llen < bufSize) {
-		buf[offset] = buf[offset + llen + splen];
-		offset++;
-	}
-	while(offset < bufSize)
-		buf[offset++] = '\0';
-
-	return line;
-} // }}}
 
 int main(int argc, char **argv) {
 	conf_parseArguments(argv, argc);
@@ -131,19 +19,19 @@ int main(int argc, char **argv) {
 		*binary = conf_binary();
 	int port = conf_port();
 
-	if(!fileExists(binary)) {
+	if(!util_exists(binary)) {
 		fprintf(stderr, "main: %s: file does not exist\n", binary);
 		return 1;
 	}
 
 	printf("Creating subprocess...\n");
 	int fds[2] = { 0 };
-	if(subprocessPipe(binary, argv, fds) != 0) {
+	if(util_subprocessPipe(binary, argv, fds) != 0) {
 		fprintf(stderr, "main: couldn't create subprocess pipe to: %s\n", binary);
 		return 5;
 	}
 	usleep(10000);
-	setNonBlocking(fds[0]);
+	util_setNonBlocking(fds[0]);
 	if(errno)
 		perror("main");
 	FILE *out = fdopen(fds[1], "w");
@@ -199,7 +87,7 @@ int main(int argc, char **argv) {
 		} else {
 			didSomething = 1;
 			char *line = NULL;
-			while((line = fetch(buf, BUF_SIZE, "\n")) != NULL) {
+			while((line = util_fetch(buf, BUF_SIZE, "\n")) != NULL) {
 				ircsock_send(isock, line);
 				free(line);
 			}
@@ -208,7 +96,7 @@ int main(int argc, char **argv) {
 		if(!didSomething)
 			usleep(1000);
 	}
-	closePipe(fds);
+	util_closePipe(fds);
 
 	printf("Quiting...\n");
 	ircsock_quit(isock);
