@@ -1,0 +1,15 @@
+[core]
+server = irc.freenode.net
+nick   = quincy
+port   = 6667
+chan   = #zebra
+binary = quincy
+
+[quincy]
+ignore    = ignore\s+(\w+)
+unignore  = unignore\s(\w+)
+comprefix = (^!|^~|^\.|quincy[:,]\s*)
+
+[modules]
+wave    = (o/|\\o)
+

@@ -3,7 +3,7 @@ LDIR=lib
 ODIR=obj
 BDIR=.
 
-BINS=$(BDIR)/quincy $(BDIR)/cm
+BINS=$(BDIR)/quincy $(BDIR)/cm $(BDIR)/conftest
 MAPS=map/vmap map/simap map/ismap
 MODULES=modules/wave
 
@@ -35,12 +35,16 @@ $(BDIR)/quincy: $(ODIR)/quincy.o $(QOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 $(BDIR)/cm: $(ODIR)/cm.o $(MOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
+$(BDIR)/conftest: $(ODIR)/conftest.o $(MOBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
 modules/%: $(ODIR)/%.o $(FOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ -lpcre
 
 $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 $(ODIR)/%.o: $(LDIR)/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+$(ODIR)/%.o: test/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 $(ODIR)/%.o: conman/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<

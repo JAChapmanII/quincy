@@ -2,6 +2,9 @@ quincy
 cm
 *.o
 
+lib/defines.h
+quincyrc
+
 lib/ismap.?
 lib/simap.?
 lib/vmap.?

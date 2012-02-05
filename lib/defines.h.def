@@ -1,0 +1,11 @@
+#ifndef DEFINES_H
+#define DEFINES_H
+
+#define DEFAULT_CONF   "quincyrc"
+#define DEFAULT_SERVER "irc.slashnet.org"
+#define DEFAULT_NICK   "quincy_nick"
+#define DEFAULT_PORT    6667
+#define DEFAULT_CHAN   "#zebra"
+#define DEFAULT_BINARY "quincy"
+
+#endif // DEFINES_H
