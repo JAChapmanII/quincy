@@ -1,5 +1,6 @@
 #include "base.h"
 #include <stdlib.h>
+#include <string.h>
 
 #define BUF_SIZE 4096
 
@@ -31,7 +32,9 @@ char *dispatch(int module) {
 		default:
 			if(strlen(userNick) + strlen(": <3") >= BUF_SIZE)
 				return "<3";
-			char buf[BUF_SIZE] = { 0 };
+			char *buf = calloc(BUF_SIZE, 1);
+			if(buf == NULL)
+				return "<3";
 			strcpy(buf, userNick);
 			strcat(buf, ": <3");
 			return buf;
