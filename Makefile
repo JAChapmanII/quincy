@@ -8,7 +8,7 @@ MAPS=map/vmap map/simap map/ismap
 MODULES=modules/wave
 
 QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(ODIR)/util.o
-MOBJS=$(ODIR)/ircsock.o
+MOBJS=$(ODIR)/ircsock.o $(ODIR)/conf.o $(ODIR)/vmap.o $(ODIR)/util.o
 FOBJS=$(ODIR)/status.o $(ODIR)/module.o
 
 LDFLAGS=-pthread

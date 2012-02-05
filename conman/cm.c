@@ -7,12 +7,8 @@
 #include <errno.h>
 
 #include "ircsock.h"
+#include "conf.h"
 
-#define DEFAULT_SERVER "irc.freenode.net"
-#define DEFAULT_NICK   "quincy"
-#define DEFAULT_PORT    6667
-#define DEFAULT_CHAN   "#zebra"
-#define DEFAULT_BINARY "quincy"
 #define BUF_SIZE 4096
 
 int closePipe(int *fds);
@@ -129,15 +125,12 @@ char *fetch(char *buf, size_t bufSize, char *split) { // {{{
 } // }}}
 
 int main(int argc, char **argv) {
-	char *server = (argc > 1) ? argv[1] : DEFAULT_SERVER,
-		*nick = (argc > 2) ? argv[2] : DEFAULT_NICK,
-		*chan = (argc > 3) ? argv[3] : DEFAULT_CHAN,
-		*binary = (argc > 4) ? argv[4] : DEFAULT_BINARY;
-	int port = DEFAULT_PORT;
-	if(argc > 5) {
-		port = atoi(argv[5]);
-		port = (port == 0) ? DEFAULT_PORT : port;
-	}
+	conf_parseArguments(argv, argc);
+	conf_read(NULL);
+	char *server = conf_server(), *nick = conf_nick(), *chan = conf_chan(),
+		*binary = conf_binary();
+	int port = conf_port();
+
 	if(!fileExists(binary)) {
 		fprintf(stderr, "main: %s: file does not exist\n", binary);
 		return 1;
