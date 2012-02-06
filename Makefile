@@ -14,7 +14,7 @@ MODULES=$(MBDIR)/wave $(MBDIR)/love
 COBJS=$(ODIR)/util.o $(ODIR)/conf.o
 QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(COBJS)
 MOBJS=$(ODIR)/ircsock.o $(ODIR)/vmap.o $(COBJS)
-FOBJS=$(ODIR)/status.o $(ODIR)/module.o
+FOBJS=$(ODIR)/status.o $(ODIR)/module_main.o
 
 LDFLAGS=-pthread
 CFLAGS=-std=c99 -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE
