@@ -354,6 +354,21 @@ ${NAME}_Node *${VNAME}n_find(${NAME}_Node *${VNAME}n, ${KEY_TYPE} key) { // {{{
 	return ${VNAME}n_find(${VNAME}n->right, key);
 } // }}}
 
+void ${VNAME}i_front(${NAME}_Iterator *${VNAME}i, ${NAME} *${VNAME}) { // {{{
+	if(!${VNAME}i || !${VNAME})
+		return;
+	${VNAME}i->map = ${VNAME};
+	${VNAME}i->type = IT_NODE;
+	${VNAME}i->current = ${VNAME}_min(${VNAME});
+} // }}}
+void ${VNAME}i_back(${NAME}_Iterator *${VNAME}i, ${NAME} *${VNAME}) { // {{{
+	if(!${VNAME}i || !${VNAME})
+		return;
+	${VNAME}i->map = ${VNAME};
+	${VNAME}i->type = IT_NODE;
+	${VNAME}i->current = ${VNAME}_max(${VNAME});
+} // }}}
+
 size_t ${VNAME}_size(${NAME} *${VNAME}) { // {{{
 	if(!${VNAME}->root)
 		return 0;

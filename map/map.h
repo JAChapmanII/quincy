@@ -69,6 +69,11 @@ ${NAME}_Node *${VNAME}_next(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n);
 // Search a ${NAME} for the element occurring before a given element
 ${NAME}_Node *${VNAME}_prev(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n);
 
+// Start a ${NAME}_Iterator at the front of a ${NAME}
+void ${VNAME}i_front(${NAME}_Iterator *${VNAME}i, ${NAME} *${VNAME});
+// Start a ${NAME}_Iterator at the back of a ${NAME}
+void ${VNAME}i_back(${NAME}_Iterator *${VNAME}i, ${NAME} *${VNAME});
+
 /* Recursively compute the total nodes in a ${NAME} */
 size_t ${VNAME}_size(${NAME} *${VNAME});
 
