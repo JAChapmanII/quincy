@@ -20,6 +20,16 @@ typedef struct {
 	${NAME}_Node *root;
 } ${NAME};
 
+// Various locations an iterator can be at currently
+enum IteratorType { IT_FRONT, IT_BACK, IT_NODE, IT_INVALID };
+
+// A ${NAME} bidirectional iterator
+typedef struct {
+	IteratorType type;
+	${NAME}_Node *current;
+	${NAME} *map;
+} ${NAME}_Iterator;
+
 /* Create an empty ${NAME} */
 ${NAME} *${VNAME}_create(void);
 /* Free all memory associated with a ${NAME} */
@@ -29,6 +39,11 @@ void ${VNAME}_free(${NAME} *${VNAME});
 ${NAME}_Node *${VNAME}n_create(${KEY_TYPE} key, ${VAL_TYPE} val);
 /* Free space associated with a ${NAME}_Node */
 void ${VNAME}n_free(${NAME}_Node *${VNAME}n);
+
+// Create a ${NAME}_Iterator object
+${NAME}_Iterator *${VNAME}i_create(${NAME} *${VNAME});
+// Free space assoicated with a ${NAME}_Iterator
+void ${VNAME}i_free(${NAME}_Iterator *${VNAME}i);
 
 /* Add a new key/value pair to the tree
  * 	returns 1 on failure, 0 otherwise

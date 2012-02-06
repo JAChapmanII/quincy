@@ -80,6 +80,21 @@ void ${VNAME}n_free(${NAME}_Node *${VNAME}n) { // {{{
 	free(${VNAME}n);
 } // }}}
 
+${NAME}_Iterator *${VNAME}i_create(${NAME} *${VNAME}) { // {{{
+	${NAME}_Iterator *${VNAME}i = malloc(sizeof(${NAME}_Iterator));
+	if(!{VNAME}i)
+		return NULL;
+	${VNAME}i->type = IT_INVALID;
+	${VNAME}i->map = ${VNAME};
+	${VNAME}i->current = NULL;
+	return ${VNAME}i;
+}// }}}
+void ${VNAME}i_free(${NAME}_Iterator *${VNAME}i) { // {{{
+	if(!{VNAME}i)
+		return;
+	free(${VNAME}i);
+} // }}}
+
 /* TODO: error handling */
 int ${VNAME}_add(${NAME} *${VNAME}, ${KEY_TYPE} key, ${VAL_TYPE} val) {
 	if(!${KEY_VALID} || !${VAL_VALID})
