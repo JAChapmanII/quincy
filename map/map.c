@@ -18,6 +18,7 @@ ${NAME}_Node *${VNAME}n_add(${NAME}_Node *${VNAME}n,
 		${KEY_TYPE} key, ${VAL_TYPE} val);
 ${NAME}_Node *${VNAME}n_find(${NAME}_Node *${VNAME}n, ${KEY_TYPE} key);
 ${NAME}_Node *${VNAME}n_min(${NAME}_Node *${VNAME}n);
+${NAME}_Node *${VNAME}n_max(${NAME}_Node *${VNAME}n);
 
 ${NAME}_Node *${VNAME}n_erase(${NAME}_Node *${VNAME}n, ${KEY_TYPE} key);
 
@@ -139,6 +140,19 @@ ${NAME}_Node *${VNAME}n_min(${NAME}_Node *${VNAME}n) { // {{{
 		return NULL;
 	if(${VNAME}n->left)
 		return ${VNAME}n_min(${VNAME}n->left);
+	return ${VNAME}n;
+} // }}}
+
+${NAME}_Node *${VNAME}_max(${NAME} *${VNAME}) { // {{{
+	if(!${VNAME} || !${VNAME}->root)
+		return NULL;
+	return ${VNAME}n_max(${VNAME}->root);
+} // }}}
+${NAME}_Node *${VNAME}n_max(${NAME}_Node *${VNAME}n) { // {{{
+	if(!${VNAME}n)
+		return NULL;
+	if(${VNAME}n->right)
+		return ${VNAME}n_max(${VNAME}n->right);
 	return ${VNAME}n;
 } // }}}
 

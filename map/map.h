@@ -42,8 +42,10 @@ int ${VNAME}_erase(${NAME} *${VNAME}, ${KEY_TYPE} key);
 /* Search ${NAME} for a specific node */
 ${NAME}_Node *${VNAME}_find(${NAME} *${VNAME}, ${KEY_TYPE} key);
 
-/* Search a ${NAME} for the minimum element */
+// Search a ${NAME} for the minimum element
 ${NAME}_Node *${VNAME}_min(${NAME} *${VNAME});
+// Search a ${NAME} for the maximum element
+${NAME}_Node *${VNAME}_max(${NAME} *${VNAME});
 
 /* Recursively compute the total nodes in a ${NAME} */
 size_t ${VNAME}_size(${NAME} *${VNAME});
