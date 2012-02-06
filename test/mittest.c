@@ -11,6 +11,12 @@ int main(int argc, char **argv) {
 			nodeCount = 16;
 	}
 
+	ISMap_Iterator *it = ismapi_create();
+	if(!it) {
+		fprintf(stderr, "test: could not create ISMap_Iterator\n");
+		return 1;
+	}
+
 	ISMap *map = ismap_create();
 	if(!map) {
 		fprintf(stderr, "test: could not create ISMap\n");
@@ -29,48 +35,35 @@ int main(int argc, char **argv) {
 	}
 	printf("\n");
 
+	ismapi_front(it, map);
 	printf("Testing forward iterator (fit)\n");
-	ISMap_Node *cur = ismap_min(map);
-	if(!cur) {
-		fprintf(stderr, "test: min returned NULL\n");
-		return 2;
-	}
-
 	int seen = 0;
-	do {
+	while(it->type != IT_END) {
 		seen++;
-		if(cur->key != keys[seen - 1])
-			fprintf(stderr, "test: expected key does not match cur->key [fit]\n");
-		cur = ismap_next(map, cur);
-	} while(cur != NULL);
-
+		if(it->current->key != keys[seen - 1])
+			fprintf(stderr, "test: expected key does not match current [fit]\n");
+		ismapi_next(it);
+	}
 	if(seen != nodeCount) {
 		fprintf(stderr, "test: seen != nodeCount [fit]\n");
 		return 3;
 	}
 
+	ismapi_back(it, map);
 	printf("Testing reverse iterator (rit)\n");
-	cur = ismap_max(map);
-	if(!cur) {
-		fprintf(stderr, "test: max returned NULL\n");
-		return 2;
-	}
-
 	seen = 0;
-	do {
+	while(it->type != IT_BEGIN) {
 		seen++;
-		if(cur->key != keys[nodeCount - seen])
-			fprintf(stderr, "test: expected key does not match cur->key [rit]\n");
-		cur = ismap_prev(map, cur);
-	} while(cur != NULL);
-
+		if(it->current->key != keys[nodeCount - seen])
+			fprintf(stderr, "test: expected key does not match currrent [rit]\n");
+		ismapi_prev(it);
+	}
 	if(seen != nodeCount) {
 		fprintf(stderr, "test: seen != nodeCount [rit]\n");
 		return 3;
 	}
 
 	printf("Everything good\n");
-
 	return 0;
 }
 
