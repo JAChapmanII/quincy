@@ -5,6 +5,8 @@
 
 #include "vmap.h"
 #include "conf.h"
+#include "util.h"
+#include "module.h"
 
 #define BUF_SIZE 4096
 
@@ -67,6 +69,25 @@ int main(int argc, char **argv) {
 		return 3;
 	}
 
+	ModuleList *modules = modulelist_create();
+	if(!modules) {
+		fprintf(stderr, "quincy: unable to create module list\n");
+		return 4;
+	}
+	VMap_Iterator *conf_it = vmapi_create();
+	if(!conf_it) {
+		fprintf(stderr, "quincy: unable to create conf_it\n");
+		return 5;
+	}
+
+	vmapi_front(conf_it, confMap);
+	while(conf_it->type != IT_END) {
+		if(util_startsWith(conf_it->current->key, "modules.")) {
+			;//TODO
+		}
+		vmapi_next(conf_it);
+	}
+
 	time_t responseTimes[3] = { 0 };
 	char buf[BUF_SIZE] = { 0 };
 	while(!feof(stdin)) {
@@ -81,6 +102,7 @@ int main(int argc, char **argv) {
 	}
 	fprintf(stderr, "quincy: quiting\n");
 
+	modulelist_free(modules);
 	return 0;
 }
 

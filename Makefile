@@ -12,7 +12,7 @@ MOUT=$(LDIR)/vmap.? $(LDIR)/simap.? $(LDIR)/ismap.?
 MODULES=$(MBDIR)/wave $(MBDIR)/love
 
 COBJS=$(ODIR)/util.o $(ODIR)/conf.o
-QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(COBJS)
+QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(ODIR)/module.o $(COBJS)
 MOBJS=$(ODIR)/ircsock.o $(ODIR)/vmap.o $(COBJS)
 FOBJS=$(ODIR)/status.o $(ODIR)/module_main.o
 
