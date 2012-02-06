@@ -35,4 +35,10 @@ int util_setNonBlocking(int fd);
  */
 char *util_fetch(char *buf, size_t bufSize, char *split);
 
+// Returns true if a given string starts with another given string
+int util_startsWith(char *str, char *begin);
+
+// Returns a copy of a substring
+char *util_substr(char *str, size_t beg, size_t len);
+
 #endif // UTIL_H

@@ -116,3 +116,27 @@ char *util_fetch(char *buf, size_t bufSize, char *split) { // {{{
 	return line;
 } // }}}
 
+int util_startsWith(char *str, char *begin) { // {{{
+	if(!str || !begin)
+		return 0;
+	if(strlen(begin) == 0)
+		return 1;
+	if(strlen(str) == 0)
+		return 0;
+	return (strncmp(str, begin, strlen(begin)) == 0);
+} // }}}
+
+char *util_substr(char *str, size_t beg, size_t len) { // {{{
+	if((str == NULL) || (len == 0))
+		return NULL;
+	ssize_t slen = strlen(str);
+	if((slen - (ssize_t)(len + beg) < 0) || ((ssize_t)beg >= slen))
+		return NULL;
+
+	char *sub = calloc(len, 1);
+	strncpy(sub, str + beg, len);
+
+	sub[len] = '\0';
+	return sub;
+} // }}}
+
