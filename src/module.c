@@ -1,6 +1,7 @@
 #include "module.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 Module *module_create(char *name, char *uargs) { // {{{
 	if(!name || !uargs)
@@ -53,6 +54,7 @@ ModuleList *modulelist_create() {
 		return NULL;
 	modules->this = NULL;
 	modules->next = NULL;
+	return modules;
 }
 void modulelist_free(ModuleList *modules) {
 	if(!modules)
@@ -60,5 +62,20 @@ void modulelist_free(ModuleList *modules) {
 	modulelist_free(modules->next);
 	module_free(modules->this);
 	free(modules);
+}
+void modulelist_add(ModuleList *modules, Module *module) {
+	if(modules->this == NULL) {
+		modules->this = module;
+		return;
+	}
+	if(modules->next == NULL) {
+		modules->next = modulelist_create();
+		if(modules->next == NULL) {
+			fprintf(stderr, "modulelist_add: couldn't create another entry!\n");
+			module_free(module);
+			return;
+		}
+	}
+	modulelist_add(modules->next, module);
 }
 

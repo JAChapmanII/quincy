@@ -23,5 +23,6 @@ int module_load(Module *module);
 
 ModuleList *modulelist_create();
 void modulelist_free(ModuleList *modules);
+void modulelist_add(ModuleList *modules, Module *module);
 
 #endif // MODULE_H
