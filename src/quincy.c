@@ -80,12 +80,23 @@ int main(int argc, char **argv) {
 		return 5;
 	}
 
-	vmapi_front(conf_it, confMap);
-	while(conf_it->type != IT_END) {
-		if(util_startsWith(conf_it->current->key, "modules.")) {
-			;//TODO
+	for(vmapi_front(conf_it, confMap); conf_it->type != IT_END;
+			vmapi_next(conf_it)) {
+		if(!util_startsWith(conf_it->current->key, "modules."))
+			continue;
+
+		char *mname = util_strend(conf_it->current->key, strlen("modules."));
+		Module *mod = module_create(mname, conf_it->current->val);
+		if(mod == NULL) {
+			fprintf(stderr, "quincy: couldn't create module: %s\n", mname);
+			free(mname);
+			continue;
 		}
-		vmapi_next(conf_it);
+		free(mname);
+		if(module_load(mod) != 0)
+			modulelist_add(modules, mod);
+		else
+			module_free(mod);
 	}
 
 	time_t responseTimes[3] = { 0 };
