@@ -143,7 +143,7 @@ uint8_t ${VNAME}n_height(${NAME}_Node *${VNAME}n) { // {{{
 	return ${VNAME}n->height;
 } // }}}
 
-// TODO: implement
+// TODO: implement -- is this still needed thanks to add semantics?
 int ${VNAME}_set(${NAME} *${VNAME}, ${KEY_TYPE} key, ${VAL_TYPE} val);
 
 ${NAME}_Node *${VNAME}_min(${NAME} *${VNAME}) { // {{{
@@ -197,6 +197,38 @@ ${NAME}_Node *${VNAME}_parent(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n) { // {
 			cur = cur->right;
 	} while(cur != NULL);
 	return NULL;
+} // }}}
+
+// TODO: these probably have special cases when there are no/few nodes
+${NAME}_Node *${VNAME}_next(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n) { // {{{
+	if(${VNAME}n->right != NULL)
+		return ${VNAME}n_min(${VNAME}n->right);
+
+	${NAME}_Node *cur = ${VNAME}n;
+	while(1) {
+		${NAME}_Node *parent = ${VNAME}_parent(${VNAME}, cur);
+		// hit end, or we don't have a parent (not in map)
+		if(parent == NULL)
+			return NULL;
+		if(parent->left == cur)
+			return parent;
+		cur = parent;
+	}
+} // }}}
+${NAME}_Node *${VNAME}_prev(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n) { // {{{
+	if(${VNAME}n->left != NULL)
+		return ${VNAME}n_max(${VNAME}n->left);
+
+	${NAME}_Node *cur = ${VNAME}n;
+	while(1) {
+		${NAME}_Node *parent = ${VNAME}_parent(${VNAME}, cur);
+		// hit end, or we don't have a parent (not in map)
+		if(parent == NULL)
+			return NULL;
+		if(parent->right == cur)
+			return parent;
+		cur = parent;
+	}
 } // }}}
 
 int ${VNAME}_erase(${NAME} *${VNAME}, ${KEY_TYPE} key) { // {{{

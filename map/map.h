@@ -64,6 +64,10 @@ ${NAME}_Node *${VNAME}_max(${NAME} *${VNAME});
 
 // Search a ${NAME} for the parent of the given element
 ${NAME}_Node *${VNAME}_parent(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n);
+// Search a ${NAME} for the element occurring after a given element
+${NAME}_Node *${VNAME}_next(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n);
+// Search a ${NAME} for the element occurring before a given element
+${NAME}_Node *${VNAME}_prev(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n);
 
 /* Recursively compute the total nodes in a ${NAME} */
 size_t ${VNAME}_size(${NAME} *${VNAME});
