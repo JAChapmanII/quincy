@@ -40,5 +40,7 @@ int util_startsWith(char *str, char *begin);
 
 // Returns a copy of a substring
 char *util_substr(char *str, size_t beg, size_t len);
+// Returns a copy of the end portion of a string
+char *util_strend(char *str, size_t beg);
 
 #endif // UTIL_H

@@ -139,4 +139,12 @@ char *util_substr(char *str, size_t beg, size_t len) { // {{{
 	sub[len] = '\0';
 	return sub;
 } // }}}
+char *util_strend(char *str, size_t beg) { // {{{
+	if(str == NULL)
+		return NULL;
+	ssize_t slen = strlen(str);
+	if((ssize_t)beg >= slen)
+		return NULL;
+	return util_substr(str, beg, slen - beg);
+} // }}}
 
