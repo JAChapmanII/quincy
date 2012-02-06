@@ -83,7 +83,7 @@ void ${VNAME}n_free(${NAME}_Node *${VNAME}n) { // {{{
 
 ${NAME}_Iterator *${VNAME}i_create(${NAME} *${VNAME}) { // {{{
 	${NAME}_Iterator *${VNAME}i = malloc(sizeof(${NAME}_Iterator));
-	if(!{VNAME}i)
+	if(!${VNAME}i)
 		return NULL;
 	${VNAME}i->type = IT_INVALID;
 	${VNAME}i->map = ${VNAME};
@@ -91,7 +91,7 @@ ${NAME}_Iterator *${VNAME}i_create(${NAME} *${VNAME}) { // {{{
 	return ${VNAME}i;
 }// }}}
 void ${VNAME}i_free(${NAME}_Iterator *${VNAME}i) { // {{{
-	if(!{VNAME}i)
+	if(!${VNAME}i)
 		return;
 	free(${VNAME}i);
 } // }}}

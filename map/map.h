@@ -21,7 +21,7 @@ typedef struct {
 } ${NAME};
 
 // Various locations an iterator can be at currently
-enum IteratorType { IT_FRONT, IT_BACK, IT_NODE, IT_INVALID };
+typedef enum { IT_FRONT, IT_BACK, IT_NODE, IT_INVALID } IteratorType;
 
 // A ${NAME} bidirectional iterator
 typedef struct {
