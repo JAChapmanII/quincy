@@ -19,6 +19,7 @@ ${NAME}_Node *${VNAME}n_add(${NAME}_Node *${VNAME}n,
 ${NAME}_Node *${VNAME}n_find(${NAME}_Node *${VNAME}n, ${KEY_TYPE} key);
 ${NAME}_Node *${VNAME}n_min(${NAME}_Node *${VNAME}n);
 ${NAME}_Node *${VNAME}n_max(${NAME}_Node *${VNAME}n);
+int ${VNAME}n_kequals(${NAME}_Node *left, ${NAME}_Node *right);
 
 ${NAME}_Node *${VNAME}n_erase(${NAME}_Node *${VNAME}n, ${KEY_TYPE} key);
 
@@ -171,6 +172,12 @@ ${NAME}_Node *${VNAME}n_max(${NAME}_Node *${VNAME}n) { // {{{
 	return ${VNAME}n;
 } // }}}
 
+int ${VNAME}n_kequals(${NAME}_Node *left, ${NAME}_Node *right) { // {{{
+	if((left == NULL) || (right == NULL))
+		return 0;
+	return (${KEY_COMP}(left->key, right->key) == 0);
+} // }}}
+
 int ${VNAME}_erase(${NAME} *${VNAME}, ${KEY_TYPE} key) { // {{{
 	if(!${VNAME} || !${KEY_VALID})
 		return 1;
@@ -284,9 +291,9 @@ ${NAME}_Node *${VNAME}_find(${NAME} *${VNAME}, ${KEY_TYPE} key) { // {{{
 	return ${VNAME}n_find(${VNAME}->root, key);
 } // }}}
 ${NAME}_Node *${VNAME}n_find(${NAME}_Node *${VNAME}n, ${KEY_TYPE} key) { // {{{
-	int cmp;
-	if(!${VNAME}n || !${KEY_VALID}) return NULL;
-	cmp = ${KEY_COMP}(${VNAME}n->key, key);
+	if(!${VNAME}n || !${KEY_VALID})
+		return NULL;
+	int cmp = ${KEY_COMP}(${VNAME}n->key, key);
 	if(!cmp)
 		return ${VNAME}n;
 	if(cmp > 0)
