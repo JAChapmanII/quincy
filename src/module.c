@@ -2,20 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 
-Module *module_create(char *name, char *lscope) { // {{{
-	if(!name || !lscope)
+Module *module_create(char *name, char *uargs) { // {{{
+	if(!name || !uargs)
 		return NULL;
 	Module *module = malloc(sizeof(Module));
 	if(!module)
 		return NULL;
 	module->name = calloc(strlen(name) + 1, 1);
-	module->lscope = calloc(strlen(lscope) + 1, 1);
-	if(!module->name || !module->lscope) {
+	module->uargs = calloc(strlen(uargs) + 1, 1);
+	if(!module->name || !module->uargs) {
 		module_free(module);
 		return NULL;
 	}
 	strcpy(module->name, name);
-	strcpy(module->lscope, lscope);
+	strcpy(module->uargs, uargs);
 	module->loaded = 0;
 	module->m_names = NULL;
 	module->m_regex = NULL;
@@ -27,8 +27,8 @@ void module_free(Module *module) { // {{{
 		return;
 	if(module->name)
 		free(module->name);
-	if(module->lscope)
-		free(module->lscope);
+	if(module->uargs)
+		free(module->uargs);
 	if(module->loaded > 0) {
 		for(int i = 0; i < module->loaded; ++i) {
 			free(module->m_names[i]);

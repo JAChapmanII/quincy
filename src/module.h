@@ -5,7 +5,7 @@
 
 typedef struct {
 	char *name;
-	char *lscope;
+	char *uargs;
 	int loaded;
 	char **m_names;
 	char **m_regex;
@@ -17,7 +17,7 @@ typedef struct ModuleList {
 	struct ModuleList *next;
 } ModuleList;
 
-Module *module_create(char *name, char *lscope);
+Module *module_create(char *name, char *uargs);
 void module_free(Module *module);
 int module_load(Module *module);
 
