@@ -62,6 +62,9 @@ ${NAME}_Node *${VNAME}_min(${NAME} *${VNAME});
 // Search a ${NAME} for the maximum element
 ${NAME}_Node *${VNAME}_max(${NAME} *${VNAME});
 
+// Search a ${NAME} for the parent of the given element
+${NAME}_Node *${VNAME}_parent(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n);
+
 /* Recursively compute the total nodes in a ${NAME} */
 size_t ${VNAME}_size(${NAME} *${VNAME});
 

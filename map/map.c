@@ -178,6 +178,27 @@ int ${VNAME}n_kequals(${NAME}_Node *left, ${NAME}_Node *right) { // {{{
 	return (${KEY_COMP}(left->key, right->key) == 0);
 } // }}}
 
+// TODO: the find method can probably use this, then simply look at the left
+// TODO: or right child for the final result.
+${NAME}_Node *${VNAME}_parent(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n) { // {{{
+	if(!${VNAME} || !${VNAME}->root || !${VNAME}n)
+		return NULL;
+	${NAME}_Node *cur = ${VNAME}->root;
+	// TODO: currently if the the target is the root, we skip over it and
+	// TODO: return a NULL. We may want to keep these semantics, but bail early?
+	do {
+		if(${VNAME}n_kequals(cur->left, ${VNAME}n) ||
+				${VNAME}n_kequals(cur->right, ${VNAME}n))
+			return cur;
+		int cmp = ${KEY_COMP}(cur->key, ${VNAME}n->key);
+		if(cmp > 0)
+			cur = cur->left;
+		else
+			cur = cur->right;
+	} while(cur != NULL);
+	return NULL;
+} // }}}
+
 int ${VNAME}_erase(${NAME} *${VNAME}, ${KEY_TYPE} key) { // {{{
 	if(!${VNAME} || !${KEY_VALID})
 		return 1;
