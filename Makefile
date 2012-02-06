@@ -8,6 +8,7 @@ TBDIR=tbin
 BINS=$(BDIR)/quincy $(BDIR)/cm
 TESTS=$(TBDIR)/conftest $(TBDIR)/mittest
 MAPS=map/vmap map/simap map/ismap
+MOUT=$(LDIR)/vmap.? $(LDIR)/simap.? $(LDIR)/ismap.?
 MODULES=$(MBDIR)/wave $(MBDIR)/love
 
 COBJS=$(ODIR)/util.o $(ODIR)/conf.o
@@ -66,5 +67,5 @@ map/%: map/%.def map/%.dec map/%.def
 	$(BDIR)/mstruct.sh $< map $(LDIR)
 
 clean:
-	rm -f $(ODIR)/*.o $(BINS) $(TESTS)
+	rm -f $(ODIR)/*.o $(BINS) $(TESTS) $(MOUT)
 
