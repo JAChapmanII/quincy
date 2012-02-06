@@ -41,7 +41,7 @@ ${NAME}_Node *${VNAME}n_create(${KEY_TYPE} key, ${VAL_TYPE} val);
 void ${VNAME}n_free(${NAME}_Node *${VNAME}n);
 
 // Create a ${NAME}_Iterator object
-${NAME}_Iterator *${VNAME}i_create(${NAME} *${VNAME});
+${NAME}_Iterator *${VNAME}i_create(void);
 // Free space assoicated with a ${NAME}_Iterator
 void ${VNAME}i_free(${NAME}_Iterator *${VNAME}i);
 
