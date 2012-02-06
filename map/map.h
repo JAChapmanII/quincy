@@ -21,7 +21,7 @@ typedef struct {
 } ${NAME};
 
 // Various locations an iterator can be at currently
-typedef enum { IT_FRONT, IT_BACK, IT_NODE, IT_INVALID } IteratorType;
+typedef enum { IT_BEGIN, IT_END, IT_NODE, IT_INVALID } IteratorType;
 
 // A ${NAME} bidirectional iterator
 typedef struct {
@@ -73,6 +73,11 @@ ${NAME}_Node *${VNAME}_prev(${NAME} *${VNAME}, ${NAME}_Node *${VNAME}n);
 void ${VNAME}i_front(${NAME}_Iterator *${VNAME}i, ${NAME} *${VNAME});
 // Start a ${NAME}_Iterator at the back of a ${NAME}
 void ${VNAME}i_back(${NAME}_Iterator *${VNAME}i, ${NAME} *${VNAME});
+
+// Move a ${NAME}_Iterator to the next element
+void ${VNAME}i_next(${NAME}_Iterator *${VNAME}i);
+// Move a ${NAME}_Iterator to the previous element
+void ${VNAME}i_prev(${NAME}_Iterator *${VNAME}i);
 
 /* Recursively compute the total nodes in a ${NAME} */
 size_t ${VNAME}_size(${NAME} *${VNAME});

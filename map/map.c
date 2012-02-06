@@ -369,6 +369,43 @@ void ${VNAME}i_back(${NAME}_Iterator *${VNAME}i, ${NAME} *${VNAME}) { // {{{
 	${VNAME}i->current = ${VNAME}_max(${VNAME});
 } // }}}
 
+void ${VNAME}i_next(${NAME}_Iterator *${VNAME}i) { // {{{
+	if(!${VNAME}i || !${VNAME}i->map)
+		return;
+	switch(${VNAME}i->type) {
+		case IT_BEGIN:
+			${VNAME}i->current = ${VNAME}_min(${VNAME}i->map);
+			${VNAME}i->type = IT_NODE;
+			return;
+		case IT_END:
+			return;
+		case IT_NODE:
+			${VNAME}i->current = ${VNAME}_next(${VNAME}i->map, ${VNAME}i->current);
+			if(${VNAME}i->current == NULL)
+				${VNAME}i->type = IT_END;
+		case IT_INVALID:
+			return;
+	}
+} // }}}
+void ${VNAME}i_prev(${NAME}_Iterator *${VNAME}i) { // {{{
+	if(!${VNAME}i || !${VNAME}i->map)
+		return;
+	switch(${VNAME}i->type) {
+		case IT_BEGIN:
+			return;
+		case IT_END:
+			${VNAME}i->current = ${VNAME}_max(${VNAME}i->map);
+			${VNAME}i->type = IT_NODE;
+			return;
+		case IT_NODE:
+			${VNAME}i->current = ${VNAME}_prev(${VNAME}i->map, ${VNAME}i->current);
+			if(${VNAME}i->current == NULL)
+				${VNAME}i->type = IT_BEGIN;
+		case IT_INVALID:
+			return;
+	}
+} // }}}
+
 size_t ${VNAME}_size(${NAME} *${VNAME}) { // {{{
 	if(!${VNAME}->root)
 		return 0;
