@@ -1,6 +1,6 @@
 quincy
 cm
-conftest
+tbin/*
 mbin/*
 *.o
 
