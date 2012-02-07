@@ -1,22 +1,39 @@
 [core]
+# core mostly contains information of where we should connect to and as
 server = irc.freenode.net
-nick   = quincy
+nick   = quincy_nick
 port   = 6667
 chan   = #zebra
-binary = quincy
+# this user is allowed to execute certain protected commands
+owner  = owner_nick
 
 [irc]
+# these are used when we parse IRC messages
 pmsg = ^:([^!]+)(?:!(\S+))?\s+PRIVMSG\s+(\S+)\s+:(.+)$
 join = ^:([^!]+)(?:!(\S+))?\s+JOIN\s+(.+)$
 quit = ^:([^!]+)(?:!(\S+))?\s+QUIT\s+(?:?(.+))?$
 
+[conman]
+# the binary conman executes to handle non-ping messages
+binary = quincy
+# the command that if matched makes conman stop
+die = ^(!|~|\.|quincy[:,]\s*[!~\.]?)die$
+
 [quincy]
-ignore    = ignore\s+(\w+)
-unignore  = unignore\s(\w+)
-comprefix = (^!|^~|^\.|quincy[:,]\s*)
+# the regex used to see if a PRIVMSG is a command
+command = ^(!|~|\.|quincy[:,]\s*[!~\.]?)(.+)$
+# the regex to ignore and unignore a user
+ignore   = ignore\s+(\w+)
+unignore = unignore\s(\w+)
+# the regex to restart quincy or reload a module
+reload  = reload(?:\s+(\S+))
+restart = restart
+# the directory where modules reside
 moduledir = mbin
 
 [modules]
+# modules to load, with their usage args on the right
 wave = global
 love = tome,sol
+fish = specific
 
