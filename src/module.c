@@ -8,6 +8,7 @@
 #define BUF_SIZE 4096
 
 char **module_fetchNames(Module *module);
+char **module_fetchRegex(Module *module);
 
 Module *module_create(char *name, char *uargs) { // {{{
 	if(!name || !uargs)
@@ -51,7 +52,8 @@ void module_free(Module *module) { // {{{
 	free(module);
 } // }}}
 
-char **module_fetchNames(Module *module) {
+// TODO: reduce these, they share almost entirely the same code
+char **module_fetchNames(Module *module) { // {{{
 	char *namesArgV[3] = { "names" };
 	Subprocess *sp = subprocess_create(module->binary, namesArgV, 1);
 	if(sp == NULL) {
@@ -88,7 +90,45 @@ char **module_fetchNames(Module *module) {
 	}
 	subprocess_free(sp);
 	return names;
-}
+} // }}}
+char **module_fetchRegex(Module *module) { // {{{
+	char *regexArgV[3] = { "regex" };
+	Subprocess *sp = subprocess_create(module->binary, regexArgV, 1);
+	if(sp == NULL) {
+		fprintf(stderr, "module_fetchRegex: couldn't create subprocess\n");
+		return NULL;
+	}
+	if(subprocess_run(sp) != 0) {
+		fprintf(stderr, "module_fetchRegex: could not run subproc\n");
+		subprocess_free(sp);
+		return NULL;
+	}
+	bufreader_setBlocking(sp->br);
+	char *line = subprocess_read(sp);
+	if(line == NULL) {
+		subprocess_free(sp);
+		return NULL;
+	}
+	int nameCount = atoi(line);
+	free(line);
+	if(nameCount < 1) {
+		subprocess_free(sp);
+		return NULL;
+	}
+	char **regex = calloc(sizeof(char *), nameCount + 1);
+	for(int i = 0; i < nameCount; ++i) {
+		regex[i] = subprocess_read(sp);
+		if(regex[i] == NULL) {
+			for(int j = 0; j < nameCount; ++j)
+				free(regex[j]);
+			free(regex);
+			subprocess_free(sp);
+			return NULL;
+		}
+	}
+	subprocess_free(sp);
+	return regex;
+} // }}}
 
 int module_load(Module *module, char *moddir) {
 	if(module->binary)
@@ -114,6 +154,7 @@ int module_load(Module *module, char *moddir) {
 	}
 
 	fprintf(stderr, "module_load: bin: %s\n", module->binary);
+
 	module->m_names = module_fetchNames(module);
 	if(module->m_names == NULL) {
 		fprintf(stderr, "module_load: could not fetch names\n");
@@ -121,6 +162,14 @@ int module_load(Module *module, char *moddir) {
 	}
 	for(int i = 0; module->m_names[i] != NULL; ++i)
 		fprintf(stderr, "\t%d: %s\n", i, module->m_names[i]);
+
+	module->m_regex = module_fetchRegex(module);
+	if(module->m_regex == NULL) {
+		fprintf(stderr, "module_load: could not fetch regex\n");
+		return 0;
+	}
+	for(int i = 0; module->m_regex[i] != NULL; ++i)
+		fprintf(stderr, "\t%d: %s\n", i, module->m_regex[i]);
 
 	return 0;
 }
