@@ -19,7 +19,7 @@ typedef struct ModuleList {
 
 Module *module_create(char *name, char *uargs);
 void module_free(Module *module);
-int module_load(Module *module);
+int module_load(Module *module, char *moddir);
 
 ModuleList *modulelist_create();
 void modulelist_free(ModuleList *modules);

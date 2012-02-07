@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "util.h"
+
+#define BUF_SIZE 4096
 
 Module *module_create(char *name, char *uargs) { // {{{
 	if(!name || !uargs)
@@ -44,7 +47,31 @@ void module_free(Module *module) { // {{{
 	free(module);
 } // }}}
 
-int module_load(Module *module) {
+int module_load(Module *module, char *moddir) {
+	size_t blen = strlen(module->name);
+	if(moddir != NULL)
+		blen += strlen(moddir) + strlen("/");
+	if(blen >= BUF_SIZE) {
+		fprintf(stderr, "module_load: bin too large for buffer\n");
+		return 0;
+	}
+
+	char bin[BUF_SIZE] = { 0 };
+	if(moddir != NULL) {
+		strcpy(bin, moddir);
+		strcat(bin, "/");
+	}
+	strcat(bin, module->name);
+
+	if(!util_exists(bin)) {
+		fprintf(stderr, "module_load: %s: does not exist\n", bin);
+		return 0;
+	}
+	int spipe[2] = { 0 };
+	char *helpArgV[3] = { bin, "names", NULL };
+	//util_subprocessPipe(bin, helpArgV, spipe);
+
+	fprintf(stderr, "module_load: bin: %s\n", bin);
 	return 0;
 }
 
