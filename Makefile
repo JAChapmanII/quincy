@@ -5,7 +5,7 @@ BDIR=.
 MBDIR=mbin
 TBDIR=tbin
 
-BINS=$(BDIR)/quincy $(BDIR)/cm
+BINS=$(BDIR)/quincy $(BDIR)/conman
 TESTS=$(TBDIR)/conftest $(TBDIR)/mittest
 MAPS=map/vmap map/simap map/ismap
 MOUT=$(LDIR)/vmap.? $(LDIR)/simap.? $(LDIR)/ismap.?
@@ -41,16 +41,19 @@ tests:   $(TESTS)
 dirs:
 	mkdir -p $(SDIR) $(LDIR) $(ODIR) $(BDIR) $(MBDIR) $(TBDIR)
 
+# make rules for quincy and conman
 $(BDIR)/quincy: $(ODIR)/quincy.o $(QOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ -lpcre
-$(BDIR)/cm: $(ODIR)/cm.o $(MOBJS)
+$(BDIR)/conman: $(ODIR)/conman.o $(MOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
+# make rules for the tests
 $(TBDIR)/conftest: $(ODIR)/conftest.o $(ODIR)/vmap.o $(COBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 $(TBDIR)/mittest: $(ODIR)/mittest.o $(ODIR)/ismap.o $(ODIR)/util.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
+# make rule for the bodule binaries
 $(MBDIR)/%: $(ODIR)/%.o $(FOBJS)
 	$(CC) $(LDFLAGS) -o $@ $^ -lpcre
 
@@ -59,8 +62,6 @@ $(ODIR)/%.o: $(SDIR)/%.c
 $(ODIR)/%.o: $(LDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 $(ODIR)/%.o: test/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-$(ODIR)/%.o: conman/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 $(ODIR)/%.o: modules/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
