@@ -25,18 +25,6 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	printf("Creating subprocess...\n");
-	int fds[2] = { 0 };
-	if(util_subprocessPipe(binary, argv, fds) != 0) {
-		fprintf(stderr, "main: couldn't create subprocess pipe to: %s\n", binary);
-		return 5;
-	}
-	usleep(10000);
-	util_setNonBlocking(fds[0]);
-	if(errno)
-		perror("main");
-	FILE *out = fdopen(fds[1], "w");
-
 	printf("Creating isock...\n");
 	IRCSock *isock = ircsock_create(server, port, nick);
 	if(isock == NULL) {
@@ -53,6 +41,23 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "main: isock could not join\n");
 		return 4;
 	}
+
+	printf("Creating subprocess...\n");
+	Subprocess *subproc = subprocess_create(binary, argv + 1, argc - 1);
+	if(!subproc) {
+		fprintf(stderr, "main: couldn't create subprocess object\n");
+		return 5;
+	}
+	if(subprocess_run(subproc) != 0) {
+		fprintf(stderr, "main: couldn't invoke subprocess: %s\n", binary);
+		return 6;
+	}
+	int *fds = subproc->pipe;
+	usleep(10000);
+	util_setNonBlocking(fds[0]);
+	if(errno)
+		perror("main");
+	FILE *out = fdopen(fds[1], "w");
 
 	char buf[BUF_SIZE] = { 0 };
 	int done = 0;
