@@ -78,3 +78,7 @@ char *bufreader_read(BufReader *br) {
 	return line;
 }
 
+int bufreader_setBlocking(BufReader *br) {
+	return util_setBlocking(br->fd);
+}
+

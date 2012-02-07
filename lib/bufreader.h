@@ -25,4 +25,7 @@ void bufreader_free(BufReader *br);
  */
 char *bufreader_read(BufReader *br);
 
+// Switch a BufReader into blocking read mode (default is nonblocking)
+int bufreader_setBlocking(BufReader *br);
+
 #endif // BUFREADER_H
