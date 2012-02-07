@@ -11,8 +11,6 @@
 #include "subprocess.h"
 #include "conf.h"
 
-#define BUF_SIZE 4096
-
 int main(int argc, char **argv) {
 	conf_parseArguments(argv, argc);
 	conf_read(NULL);
@@ -52,14 +50,11 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "main: couldn't invoke subprocess: %s\n", binary);
 		return 6;
 	}
-	int *fds = subproc->pipe;
 	usleep(10000);
-	util_setNonBlocking(fds[0]);
 	if(errno)
 		perror("main");
-	FILE *out = fdopen(fds[1], "w");
+	FILE *out = subprocess_wfile(subproc);
 
-	char buf[BUF_SIZE] = { 0 };
 	int done = 0;
 	while(!done) {
 		int didSomething = 0;
@@ -83,26 +78,20 @@ int main(int argc, char **argv) {
 			}
 		}
 
-		size_t blen = strlen(buf);
-		ssize_t ramount = read(fds[0], buf + blen, BUF_SIZE - blen);
-		if(ramount < 0) {
-			if(!((errno == EAGAIN) || (errno == EWOULDBLOCK)))
-				perror("ircsock_read");
-		} else if(ramount == 0) {
-			; // TODO: handle EOF from subproc
-		} else {
-			didSomething = 1;
-			char *line = NULL;
-			while((line = util_fetch(buf, BUF_SIZE, "\n")) != NULL) {
-				ircsock_send(isock, line);
-				free(line);
-			}
+		char *line = NULL;
+		while((line = bufreader_read(subproc->br)) != NULL) {
+			ircsock_send(isock, line);
+			free(line);
+		}
+		if(subproc->br->eof) {
+			printf("main: subproc has returned EOF\n");
+			done = 1;
 		}
 
 		if(!didSomething)
 			usleep(1000);
 	}
-	util_closePipe(fds);
+	util_closePipe(subproc->pipe);
 
 	printf("Quiting...\n");
 	ircsock_quit(isock);
