@@ -54,11 +54,13 @@ int main(int argc, char **argv) {
 
 	char *command = argv[1];
 	if(strcmp(command, "names") == 0) {
+		printf("%d\n", moduleCount);
 		for(int module = 0; module < moduleCount; ++module)
-			printf("%d: %s\n", module, names[module]);
+			printf("%s\n", names[module]);
 	} else if(strcmp(command, "regex") == 0) {
+		printf("%d\n", regexCount);
 		for(int module = 0; module < regexCount; ++module)
-			printf("%d: %s\n", module, regex[module]);
+			printf("%s\n", regex[module]);
 	} else if(strcmp(command, "help") == 0) {
 		if(argc != 3) {
 			fprintf(stderr, "module: error: help takes module name\n");
