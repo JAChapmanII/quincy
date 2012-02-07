@@ -1,11 +1,30 @@
 #ifndef SUBPROCESS_H
 #define SUBPROCESS_H
 
-/* Create a pipe to a subprocess
- * 	binary: the name of the binary to invoke
- * 	argv: this array is passed to the subprocess as its main's argv
- * 	fds: an int[2] to store the read/write ends of the pipe
- */
-int util_subprocessPipe(const char *binary, char **argv, int *fds);
+#include <sys/types.h>
+
+typedef enum { SP_BEXEC, SP_EXEC, SP_AEXEC, SP_INVALID } SubprocessStatus;
+
+typedef struct {
+	char *binary;
+	char **argv;
+	int argc;
+	int pipe[2];
+	SubprocessStatus status;
+	pid_t pid;
+	int value;
+} Subprocess;
+
+// Create a Subprocess object for a binary
+Subprocess *subprocess_create(char *binary, char **argv, int argc);
+// Free memory associated with a subproc
+void subprocess_free(Subprocess *subproc);
+
+// Actually execute the configured binary
+int subprocess_run(Subprocess *subproc);
+// Attempts to update the status and returns the new one
+int subprocess_status(Subprocess *subproc);
+// Send the SIGKILL signal to the running subprocess, returs results of kill
+int subprocess_kill(Subprocess *subproc);
 
 #endif // SUBPROCESS_H
