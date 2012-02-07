@@ -9,6 +9,11 @@
 #include "module.h"
 
 #define BUF_SIZE 4096
+#define MAX_SUBSTR 16
+#define OVEC_COUNT (MAX_SUBSTR * 3)
+
+char **pcre_match(pcre *regex, char *str, int *regres);
+void freeMatchStrings(char **strings);
 
 int main(int argc, char **argv) {
 	conf_parseArguments(argv, argc);
@@ -107,12 +112,18 @@ int main(int argc, char **argv) {
 	time_t responseTimes[3] = { 0 };
 	char buf[BUF_SIZE] = { 0 };
 	while(!feof(stdin)) {
+		memset(buf, '\0', BUF_SIZE);
 		if(fgets(buf, BUF_SIZE, stdin) == buf) {
-			if(strstr(buf, "PRIVMSG")) {
+			int matchres = 0;
+			char **strs = pcre_match(pmsg, buf, &matchres);
+			if(matchres > 0) {
+				for(int i = 0; i < matchres; ++i)
+					fprintf(stderr, "%d: %s\n", i, strs[i]);
 				printf("PRIVMSG #zebra :Hello!\n");
 				fflush(stdout);
 			}
-			memset(buf, '\0', BUF_SIZE);
+			if(strs != NULL)
+				freeMatchStrings(strs);
 		} else
 			usleep(1000);
 	}
@@ -121,4 +132,57 @@ int main(int argc, char **argv) {
 	modulelist_free(modules);
 	return 0;
 }
+
+char **pcre_match(pcre *regex, char *str, int *regres) { // {{{
+	if(!regex || !str)
+		return NULL;
+	int ovector[OVEC_COUNT] = { 0 };
+	int matchres = pcre_exec(regex, NULL, str, strlen(str), 0, 0,
+			ovector, OVEC_COUNT);
+	if(matchres == 0) {
+		fprintf(stderr, "pcre_match: ovector not large enough\n");
+		if(regres != NULL)
+			*regres = -1;
+		return NULL;
+	}
+	if(matchres < 0) {
+		switch(matchres) {
+			case PCRE_ERROR_NOMATCH:
+				if(regres != NULL)
+					*regres = 0;
+				return NULL;
+			default:
+				if(regres != NULL)
+					*regres = -2;
+				fprintf(stderr, "pcre_match: error %d\n", matchres);
+				return NULL;
+		}
+	}
+	if(regres != NULL)
+		*regres = matchres;
+	char **substrings = calloc(sizeof(char *), matchres + 1);
+	if(!substrings) {
+		fprintf(stderr, "pcre_match: substrings array alloc failure\n");
+		return NULL;
+	}
+	for(int i = 0; i < matchres; ++i) {
+		substrings[i] = util_substr(str, ovector[2*i],
+				ovector[2*i + 1] - ovector[2*i]);
+		if(substrings[i] == NULL) {
+			fprintf(stderr, "pcre_match: substring alloc failure\n");
+			for(int j = 0; j < i; ++j)
+				free(substrings[j]);
+			free(substrings);
+			return NULL;
+		}
+	}
+	return substrings;
+} // }}}
+void freeMatchStrings(char **strings) { // {{{
+	if(!strings)
+		return;
+	for(int i = 0; strings[i] != NULL; ++i)
+		free(strings[i]);
+	free(strings);
+} // }}}
 
