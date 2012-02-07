@@ -3,6 +3,7 @@
 
 #include <sys/types.h>
 #include <stdio.h>
+#include "bufreader.h"
 
 typedef enum { SP_BEXEC, SP_EXEC, SP_AEXEC, SP_INVALID } SubprocessStatus;
 
@@ -14,6 +15,8 @@ typedef struct {
 	SubprocessStatus status;
 	pid_t pid;
 	int value;
+
+	BufReader *br;
 } Subprocess;
 
 // Create a Subprocess object for a binary
@@ -30,5 +33,7 @@ int subprocess_kill(Subprocess *subproc);
 
 // Return a write-mode FILE * hooked to the stdin of a subprocess
 FILE *subprocess_wfile(Subprocess *subproc);
+// Returns a valid line read from stdout, or NULL if nothing was available
+char *subprocess_read(Subprocess *subproc);
 
 #endif // SUBPROCESS_H

@@ -39,6 +39,7 @@ Subprocess *subprocess_create(char *binary, char **argv, int argc) { // {{{
 	subproc->status = SP_BEXEC;
 	subproc->pid = 0;
 	subproc->value = 0;
+	subproc->br = NULL;
 	return subproc;
 } // }}}
 void subprocess_free(Subprocess *subproc) { // {{{
@@ -51,6 +52,8 @@ void subprocess_free(Subprocess *subproc) { // {{{
 			free(subproc->argv[i]);
 	if(subproc->status == SP_EXEC)
 		subprocess_kill(subproc);
+	if(subproc->br != NULL)
+		bufreader_free(subproc->br);
 	free(subproc);
 } // }}}
 
@@ -102,6 +105,14 @@ int subprocess_run(Subprocess *subproc) {
 	close(right[1]);
 	subproc->pipe[0] = right[0];
 	subproc->pipe[1] = left[1];
+
+	// TODO: create above, setup now?
+	subproc->br = bufreader_create(subproc->pipe[0], "\n", 4096);
+	if(subproc->br == NULL) {
+		fprintf(stderr, "subprocess_run: couldn't create bufreader\n");
+		// TODO: better handling
+		return -80;
+	}
 
 	subproc->status = SP_EXEC;
 	return 0;
