@@ -80,6 +80,11 @@ int main(int argc, char **argv) {
 		return 5;
 	}
 
+	char *moddir = NULL;
+	VMap_Node *mdNode = vmap_find(confMap, "quincy.moduledir");
+	if(mdNode != NULL)
+		moddir = mdNode->val;
+
 	for(vmapi_front(conf_it, confMap); conf_it->type != IT_END;
 			vmapi_next(conf_it)) {
 		if(!util_startsWith(conf_it->current->key, "modules."))
@@ -93,7 +98,7 @@ int main(int argc, char **argv) {
 			continue;
 		}
 		free(mname);
-		if(module_load(mod) != 0)
+		if(module_load(mod, moddir) != 0)
 			modulelist_add(modules, mod);
 		else
 			module_free(mod);
