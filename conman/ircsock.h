@@ -2,6 +2,7 @@
 #define IRCSOCK_H
 
 #include <sys/types.h>
+#include "bufreader.h"
 
 #define IRCSOCK_MERROR   -2
 #define IRCSOCK_BUF_SIZE 4096
@@ -24,7 +25,7 @@ typedef struct {
 
 	char *chan;
 
-	char buf[IRCSOCK_BUF_SIZE];
+	BufReader *br;
 	char wbuf[IRCSOCK_BUF_SIZE];
 } IRCSock;
 

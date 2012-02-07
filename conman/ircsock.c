@@ -49,8 +49,8 @@ IRCSock *ircsock_create(char *host, int port, char *nick) { /*{{{*/
 	strcpy(ircsock->nick, nick);
 
 	ircsock->socket = -1;
+	ircsock->br = NULL;
 
-	memset(ircsock->buf, '\0', IRCSOCK_BUF_SIZE);
 	memset(ircsock->wbuf, '\0', IRCSOCK_BUF_SIZE);
 
 	return ircsock;
@@ -60,6 +60,8 @@ IRCSock *ircsock_create(char *host, int port, char *nick) { /*{{{*/
 void ircsock_free(IRCSock *ircsock) { /*{{{*/
 	if(!ircsock)
 		return;
+	if(ircsock->br)
+		bufreader_free(ircsock->br);
 	free(ircsock->host);
 	free(ircsock->nick);
 	free(ircsock->chan);
@@ -111,9 +113,11 @@ int ircsock_connect(IRCSock *ircsock) { // {{{
 	}
 	freeaddrinfo(result);
 
-	// set socket to non-blocking mode
-	int ss = fcntl(ircsock->socket, F_GETFL, 0);
-	fcntl(ircsock->socket, F_SETFL, ss | O_NONBLOCK);
+	ircsock->br = bufreader_create(ircsock->socket, "\r\n", 4096);
+	if(ircsock->br == NULL) {
+		fprintf(stderr, "ircsock_connect: could not create br\n");
+		return 4;
+	}
 
 	// allocate space for NICK IRC command
 	char *nickc = malloc(16 + strlen(ircsock->nick));
@@ -186,22 +190,7 @@ int ircsock_connect(IRCSock *ircsock) { // {{{
 } // }}}
 
 char *ircsock_read(IRCSock *ircsock) { // {{{
-	size_t blen = strlen(ircsock->buf);
-	char *line = util_fetch(ircsock->buf, IRCSOCK_BUF_SIZE, "\r\n");
-	if(line != NULL)
-		return line;
-
-	ssize_t ramount = read(ircsock->socket, ircsock->buf + blen,
-			IRCSOCK_BUF_SIZE - blen);
-	if((ramount < 0) && ((errno == EAGAIN) || (errno == EWOULDBLOCK)))
-		return NULL;
-	if(ramount < 0) {
-		perror("ircsock_read");
-		return NULL;
-	}
-
-	line = util_fetch(ircsock->buf, IRCSOCK_BUF_SIZE, "\r\n");
-	return line;
+	return bufreader_read(ircsock->br);
 } // }}}
 
 ssize_t ircsock_send(IRCSock *ircsock, char *str) { // {{{
