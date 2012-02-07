@@ -1,14 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-
 #include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
 
 #include "ircsock.h"
-#include "util.h"
 #include "subprocess.h"
+#include "util.h"
 #include "conf.h"
 
 int main(int argc, char **argv) {
@@ -50,11 +46,10 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "main: couldn't invoke subprocess: %s\n", binary);
 		return 6;
 	}
-	usleep(10000);
-	if(errno)
-		perror("main");
 	FILE *out = subprocess_wfile(subproc);
+	usleep(10000);
 
+	printf("Entering main loop...\n");
 	int done = 0;
 	while(!done) {
 		int didSomething = 0;
