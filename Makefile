@@ -13,7 +13,8 @@ MODULES=$(MBDIR)/wave $(MBDIR)/love
 
 COBJS=$(ODIR)/util.o $(ODIR)/conf.o
 SOBJS=$(ODIR)/subprocess.o $(ODIR)/bufreader.o $(ODIR)/util.o
-QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(ODIR)/module.o $(COBJS)
+QOBJS=$(ODIR)/vmap.o $(ODIR)/simap.o $(ODIR)/ismap.o $(ODIR)/module.o \
+    $(SOBJS) $(COBJS)
 MOBJS=$(ODIR)/ircsock.o $(ODIR)/vmap.o $(SOBJS) $(COBJS)
 FOBJS=$(ODIR)/status.o $(ODIR)/module_main.o
 

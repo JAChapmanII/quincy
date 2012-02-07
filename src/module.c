@@ -3,8 +3,11 @@
 #include <string.h>
 #include <stdio.h>
 #include "util.h"
+#include "subprocess.h"
 
 #define BUF_SIZE 4096
+
+char **module_fetchNames(Module *module);
 
 Module *module_create(char *name, char *uargs) { // {{{
 	if(!name || !uargs)
@@ -18,6 +21,7 @@ Module *module_create(char *name, char *uargs) { // {{{
 		module_free(module);
 		return NULL;
 	}
+	module->binary = NULL;
 	module->loaded = 0;
 	module->m_names = NULL;
 	module->m_regex = NULL;
@@ -31,6 +35,8 @@ void module_free(Module *module) { // {{{
 		free(module->name);
 	if(module->uargs)
 		free(module->uargs);
+	if(module->binary)
+		free(module->binary);
 	if(module->loaded > 0) {
 		for(int i = 0; i < module->loaded; ++i) {
 			free(module->m_names[i]);
@@ -45,31 +51,77 @@ void module_free(Module *module) { // {{{
 	free(module);
 } // }}}
 
+char **module_fetchNames(Module *module) {
+	char *namesArgV[3] = { "names" };
+	Subprocess *sp = subprocess_create(module->binary, namesArgV, 1);
+	if(sp == NULL) {
+		fprintf(stderr, "module_fetchNames: couldn't create subprocess\n");
+		return NULL;
+	}
+	if(subprocess_run(sp) != 0) {
+		fprintf(stderr, "module_fetchNames: could not run subproc\n");
+		subprocess_free(sp);
+		return NULL;
+	}
+	bufreader_setBlocking(sp->br);
+	char *line = subprocess_read(sp);
+	if(line == NULL) {
+		subprocess_free(sp);
+		return NULL;
+	}
+	int nameCount = atoi(line);
+	free(line);
+	if(nameCount < 1) {
+		subprocess_free(sp);
+		return NULL;
+	}
+	char **names = calloc(sizeof(char *), nameCount + 1);
+	for(int i = 0; i < nameCount; ++i) {
+		names[i] = subprocess_read(sp);
+		if(names[i] == NULL) {
+			for(int j = 0; j < nameCount; ++j)
+				free(names[j]);
+			free(names);
+			subprocess_free(sp);
+			return NULL;
+		}
+	}
+	subprocess_free(sp);
+	return names;
+}
+
 int module_load(Module *module, char *moddir) {
+	if(module->binary)
+		free(module->binary);
 	size_t blen = strlen(module->name);
 	if(moddir != NULL)
 		blen += strlen(moddir) + strlen("/");
-	if(blen >= BUF_SIZE) {
-		fprintf(stderr, "module_load: bin too large for buffer\n");
+	module->binary = calloc(blen + 1, 1);
+	if(module->binary == NULL) {
+		fprintf(stderr, "module_load: calloc failure\n");
 		return 0;
 	}
 
-	char bin[BUF_SIZE] = { 0 };
 	if(moddir != NULL) {
-		strcpy(bin, moddir);
-		strcat(bin, "/");
+		strcpy(module->binary, moddir);
+		strcat(module->binary, "/");
 	}
-	strcat(bin, module->name);
+	strcat(module->binary, module->name);
 
-	if(!util_exists(bin)) {
-		fprintf(stderr, "module_load: %s: does not exist\n", bin);
+	if(!util_exists(module->binary)) {
+		fprintf(stderr, "module_load: %s: does not exist\n", module->binary);
 		return 0;
 	}
-	int spipe[2] = { 0 };
-	char *helpArgV[3] = { bin, "names", NULL };
-	//util_subprocessPipe(bin, helpArgV, spipe);
 
-	fprintf(stderr, "module_load: bin: %s\n", bin);
+	fprintf(stderr, "module_load: bin: %s\n", module->binary);
+	module->m_names = module_fetchNames(module);
+	if(module->m_names == NULL) {
+		fprintf(stderr, "module_load: could not fetch names\n");
+		return 0;
+	}
+	for(int i = 0; module->m_names[i] != NULL; ++i)
+		fprintf(stderr, "\t%d: %s\n", i, module->m_names[i]);
+
 	return 0;
 }
 

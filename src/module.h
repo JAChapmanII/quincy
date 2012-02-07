@@ -6,6 +6,7 @@
 typedef struct {
 	char *name;
 	char *uargs;
+	char *binary;
 	int loaded;
 	char **m_names;
 	char **m_regex;
