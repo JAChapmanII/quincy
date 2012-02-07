@@ -88,6 +88,19 @@ int main(int argc, char **argv) {
 		return 3;
 	}
 
+	vmapn = vmap_find(confMap, "quincy.reload");
+	if(vmapn == NULL) {
+		fprintf(stderr, "quincy: unable to find reload regex\n");
+		return 2;
+	}
+	pcre *reload = pcre_compile(vmapn->val, 0,
+			&errorMessage, &errorOffset, NULL);
+	if(reload == NULL) {
+		fprintf(stderr, "quincy: error creating reload pcre object: %d: %s\n",
+				errorOffset, errorMessage);
+		return 3;
+	}
+
 	// TODO: the last several blocks are equivalent, essentiall...
 	vmapn = vmap_find(confMap, "quincy.command");
 	if(vmapn == NULL) {
@@ -160,6 +173,42 @@ int main(int argc, char **argv) {
 						fprintf(stderr, "quincy: restarting\n");
 						return 77;
 					}
+					int rmatchres = 0;
+					char **rstrs = pcre_match(reload, strs[4], &rmatchres);
+					if(rmatchres > 0) {
+						int found = 0;
+						ModuleList *ml = NULL;
+						for(ml = modules; ml && ml->this; ml = ml->next) {
+							if(strcmp(ml->this->name, rstrs[1]) == 0) {
+								found = 1;
+								break;
+							}
+						}
+						if(found) {
+							char *mname = strdup(ml->this->name),
+								*uargs = strdup(ml->this->uargs);
+							if(!mname || !uargs) {
+								fprintf(stderr, "quincy: mname|uargs strdup failed\n");
+								return -1;
+							}
+							module_free(ml->this);
+
+							ml->this = module_create(mname, uargs);
+							if(ml->this == NULL) {
+								fprintf(stderr,
+										"quincy: couldn't recreate module: %s\n", mname);
+								return -2;
+							}
+							free(mname);
+							free(uargs);
+							printf("PRIVMSG %s :%s: module %s reloaded\n",
+									chan, owner, rstrs[1]);
+						} else {
+							printf("PRIVMSG %s :%s: module not found\n", chan, owner);
+						}
+					}
+					if(rstrs != NULL)
+						freeMatchStrings(rstrs);
 				}
 
 				int cmatchres = 0;
