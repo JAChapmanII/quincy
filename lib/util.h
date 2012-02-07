@@ -16,6 +16,8 @@ int util_exists(const char *fileName);
 
 // Set a file descriptor to non blocking mode
 int util_setNonBlocking(int fd);
+// Set a file descriptor to blocking mode
+int util_setBlocking(int fd);
 
 /* Extract a string from the specified buf
  * 	buf: the string buffer

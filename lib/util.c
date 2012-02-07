@@ -43,6 +43,10 @@ int util_setNonBlocking(int fd) { // {{{
 	int ss = fcntl(fd, F_GETFL, 0);
 	return fcntl(fd, F_SETFL, ss | O_NONBLOCK);
 } // }}}
+int util_setBlocking(int fd) { // {{{
+	int ss = fcntl(fd, F_GETFL, 0);
+	return fcntl(fd, F_SETFL, ss & ~O_NONBLOCK);
+} // }}}
 
 char *util_fetch(char *buf, size_t bufSize, char *split) { // {{{
 	char *lb = strstr(buf, split);
