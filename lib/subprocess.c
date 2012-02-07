@@ -135,4 +135,7 @@ int subprocess_kill(Subprocess *subproc) {
 FILE *subprocess_wfile(Subprocess *subproc) {
 	return fdopen(subproc->pipe[1], "w");
 }
+char *subprocess_read(Subprocess *subproc) {
+	return bufreader_read(subproc->br);
+}
 
