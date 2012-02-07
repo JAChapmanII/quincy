@@ -36,23 +36,28 @@ int main(int argc, char **argv) {
 		return 4;
 	}
 
-	printf("Creating subprocess...\n");
-	Subprocess *subproc = subprocess_create(binary, argv + 1, argc - 1);
-	if(!subproc) {
-		fprintf(stderr, "main: couldn't create subprocess object\n");
-		return 5;
-	}
-	if(subprocess_run(subproc) != 0) {
-		fprintf(stderr, "main: couldn't invoke subprocess: %s\n", binary);
-		return 6;
-	}
-	FILE *out = subprocess_wfile(subproc);
-	usleep(10000);
-
-	printf("Entering main loop...\n");
 	int done = 0;
+	Subprocess *subproc = NULL;
+	FILE *out = NULL;
+	printf("Entering main loop...\n");
 	while(!done) {
 		int didSomething = 0;
+
+		if(subproc == NULL) {
+			printf("Creating subprocess...\n");
+			subproc = subprocess_create(binary, argv + 1, argc - 1);
+			if(!subproc) {
+				fprintf(stderr, "main: couldn't create subprocess object\n");
+				return 5;
+			}
+			if(subprocess_run(subproc) != 0) {
+				fprintf(stderr, "main: couldn't invoke subprocess: %s\n", binary);
+				return 6;
+			}
+			out = subprocess_wfile(subproc);
+			didSomething = 1;
+			usleep(10000);
+		}
 
 		char *str = NULL;
 		while((str = ircsock_read(isock)) != NULL) {
@@ -80,7 +85,9 @@ int main(int argc, char **argv) {
 		}
 		if(subproc->br->eof) {
 			printf("main: subproc has returned EOF\n");
-			done = 1;
+			fclose(out);
+			subprocess_free(subproc);
+			subproc = NULL;
 		}
 
 		if(!didSomething)
