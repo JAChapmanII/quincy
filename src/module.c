@@ -7,8 +7,13 @@
 
 #define BUF_SIZE 4096
 
+void module_freeNames(Module *module);
+void module_freeRegex(Module *module);
+void module_freePCRE(Module *module);
+
 char **module_fetchNames(Module *module);
 char **module_fetchRegex(Module *module);
+pcre **module_constructRegex(Module *module);
 
 Module *module_create(char *name, char *uargs) { // {{{
 	if(!name || !uargs)
@@ -38,18 +43,38 @@ void module_free(Module *module) { // {{{
 		free(module->uargs);
 	if(module->binary)
 		free(module->binary);
-	if(module->loaded > 0) {
-		for(int i = 0; i < module->loaded; ++i) {
-			free(module->m_names[i]);
-			free(module->m_regex[i]);
-			if(module->regex[i])
-				pcre_free(module->regex[i]);
-		}
-		free(module->m_names);
-		free(module->m_regex);
-		free(module->regex);
-	}
+	module_freeNames(module);
+	module_freeRegex(module);
+	module_freePCRE(module);
 	free(module);
+} // }}}
+
+void module_freeNames(Module *module) { // {{{
+	if(!module)
+		return;
+	if(!module->m_names)
+		return;
+	for(int i = 0; module->m_names[i] != NULL; ++i)
+		free(module->m_names[i]);
+	free(module->m_names);
+} // }}}
+void module_freeRegex(Module *module) { // {{{
+	if(!module)
+		return;
+	if(!module->m_regex)
+		return;
+	for(int i = 0; module->m_regex[i] != NULL; ++i)
+		free(module->m_regex[i]);
+	free(module->m_regex);
+} // }}}
+void module_freePCRE(Module *module) { // {{{
+	if(!module)
+		return;
+	if(!module->regex)
+		return;
+	for(int i = 0; module->regex[i] != NULL; ++i)
+		pcre_free(module->regex[i]);
+	free(module->regex);
 } // }}}
 
 // TODO: reduce these, they share almost entirely the same code
@@ -130,6 +155,25 @@ char **module_fetchRegex(Module *module) { // {{{
 	return regex;
 } // }}}
 
+pcre **module_constructRegex(Module *module) { // {{{
+	pcre **regex = calloc(sizeof(pcre *), module->loaded);
+	const char *errorMessage = NULL;
+	int errorOffset = 0;
+	for(int i = 0; i < module->loaded; ++i) {
+		regex[i] = pcre_compile(module->m_regex[i], 0,
+				&errorMessage, &errorOffset, NULL);
+		if(regex[i] == NULL) {
+			fprintf(stderr, "module_constructRegex: pcre_compile failure @%d: %s\n",
+					errorOffset, errorMessage);
+			for(int j = 0; j < i; ++j)
+				pcre_free(regex[i]);
+			free(regex);
+			return NULL;
+		}
+	}
+	return regex;
+} // }}}
+
 int module_load(Module *module, char *moddir) {
 	if(module->binary)
 		free(module->binary);
@@ -160,18 +204,33 @@ int module_load(Module *module, char *moddir) {
 		fprintf(stderr, "module_load: could not fetch names\n");
 		return 0;
 	}
-	for(int i = 0; module->m_names[i] != NULL; ++i)
-		fprintf(stderr, "\t%d: %s\n", i, module->m_names[i]);
-
+	int nameCount = 0;
+	for(nameCount = 0; module->m_names[nameCount] != NULL; ++nameCount)
+		; // count up names
 	module->m_regex = module_fetchRegex(module);
 	if(module->m_regex == NULL) {
 		fprintf(stderr, "module_load: could not fetch regex\n");
 		return 0;
 	}
-	for(int i = 0; module->m_regex[i] != NULL; ++i)
-		fprintf(stderr, "\t%d: %s\n", i, module->m_regex[i]);
+	int regexCount = 0;
+	for(regexCount = 0; module->m_regex[regexCount] != NULL; ++regexCount)
+		; // count up regex
 
-	return 0;
+	if(nameCount != regexCount) {
+		fprintf(stderr, "module_load: regex count != name count\n");
+		module_freeNames(module);
+		module_freeRegex(module);
+		return 0;
+	}
+	module->loaded = nameCount;
+
+	module->regex = module_constructRegex(module);
+	if(module->regex == NULL) {
+		module->loaded = 0;
+		return 0;
+	}
+
+	return module->loaded;
 }
 
 ModuleList *modulelist_create() {
