@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-static char *m_names[] = {   "wave", NULL };
-static char *m_regex[] = { "o/|\\o", NULL };
+static char *m_names[] = {       "wave", NULL };
+static char *m_regex[] = { "^(o/|\\o)$", NULL };
 
 int moduleInit(void) {
 	srand(time(NULL));
