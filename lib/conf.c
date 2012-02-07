@@ -9,7 +9,7 @@
 
 static VMap *m_confMap = NULL;
 
-static char *m_server = DEFAULT_CONF;
+static char *m_server = DEFAULT_SERVER;
 static char *m_nick   = DEFAULT_NICK;
 static char *m_chan   = DEFAULT_CHAN;
 static char *m_binary = DEFAULT_BINARY;
