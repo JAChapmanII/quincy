@@ -18,7 +18,7 @@ MOBJS=$(ODIR)/ircsock.o $(ODIR)/vmap.o $(SOBJS) $(COBJS)
 FOBJS=$(ODIR)/status.o $(ODIR)/module_main.o
 
 LDFLAGS=-pthread
-CFLAGS=-std=c99 -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE
+CFLAGS=-std=c99 -D_POSIX_C_SOURCE=200112L -D_BSD_SOURCE -D_XOPEN_SOURCE=700
 CFLAGS+=-pedantic -Wall -Wextra
 CFLAGS+=-I$(LDIR)
 
