@@ -12,14 +12,12 @@ Module *module_create(char *name, char *uargs) { // {{{
 	Module *module = malloc(sizeof(Module));
 	if(!module)
 		return NULL;
-	module->name = calloc(strlen(name) + 1, 1);
-	module->uargs = calloc(strlen(uargs) + 1, 1);
+	module->name = strdup(name);
+	module->uargs = strdup(uargs);
 	if(!module->name || !module->uargs) {
 		module_free(module);
 		return NULL;
 	}
-	strcpy(module->name, name);
-	strcpy(module->uargs, uargs);
 	module->loaded = 0;
 	module->m_names = NULL;
 	module->m_regex = NULL;

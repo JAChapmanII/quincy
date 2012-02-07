@@ -241,11 +241,10 @@ int ircsock_join(IRCSock *ircsock, char *chan) { /*{{{*/
 	if(ircsock->chan != NULL)
 		free(ircsock->chan);
 
-	ircsock->chan = calloc(strlen(chan) + 1, 1);
+	ircsock->chan = strdup(chan);
 	if(!ircsock->chan) {
 		return 5;
 	}
-	strcpy(ircsock->chan, chan);
 
 	/* these use 16 as it should cover needed space for 4 letter command, a
 	 * space, and extra arguments besides nick/chan */

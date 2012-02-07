@@ -13,11 +13,9 @@ int vmap_stringCopy(char **dst, char **src) { // {{{
 		free(*dst);
 		*dst = NULL;
 	}
-	*dst = calloc(strlen(*src) + 1, 1);
+	*dst = strdup(*src);
 	if(*dst == NULL)
 		return ALLOC_FAIL;
-
-	strcpy(*dst, *src);
 	return SUCCESS;
 } // }}}
 
@@ -26,12 +24,7 @@ int vmap_stringCompare(char *s1, char *s2) { // {{{
 } // }}}
 
 char *vmap_stringFormat(char *str) { // {{{
-	char *copy = calloc(strlen(str) + 1, 1);
-	if(copy == NULL) {
-		return NULL; // TODO: better handling?
-	}
-	strcpy(copy, str);
-	return copy;
+	return strdup(str); // TODO: better error handling
 } // }}}
 
 size_t vmap_stringSize(char *str) { // {{{
