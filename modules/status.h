@@ -7,7 +7,8 @@
 #define ENO_MODULES   3
 #define ENULL_REGEX   4
 #define EMODNEREGEX   5
-#define EEXIT_FAILURE 6
+#define ENO_STRING    6
+#define EEXIT_FAILURE 7
 
 #define EREGEX_ERROR  40
 

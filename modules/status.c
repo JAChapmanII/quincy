@@ -18,6 +18,9 @@ int moduleError(int statusCode, int errorCode) {
 		case EMODNEREGEX:
 			fprintf(stderr, "module: error: regex count not equal to module count\n");
 			break;
+		case ENO_STRING:
+			fprintf(stderr, "module: error: dispatch returned no string\n");
+			break;
 		case EEXIT_FAILURE:
 			fprintf(stderr, "module: error: cleanup failed [%d]\n", errorCode);
 			break;
