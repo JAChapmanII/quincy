@@ -22,15 +22,6 @@
  */
 struct addrinfo *ircsock_lookupDomain(IRCSock *ircsock);
 
-/* Function used to extract a string from the internal buffer, returning a
- * copy of it and deleting it from the buffer
- *
- * Returns a valid string owned by the caller, or
- * 	NULL if there is no string available
- */
-char *ircsock_fetch(IRCSock *ircsock);
-
-
 IRCSock *ircsock_create(char *host, int port, char *nick) { /*{{{*/
 	IRCSock *ircsock = malloc(sizeof(IRCSock));
 	if(!ircsock)
@@ -194,35 +185,9 @@ int ircsock_connect(IRCSock *ircsock) { // {{{
 	return -1;
 } // }}}
 
-char *ircsock_fetch(IRCSock *ircsock) { // {{{
-	char *lb = strstr(ircsock->buf, "\r\n");
-	if(lb == NULL)
-		return NULL;
-
-	size_t llen = lb - ircsock->buf;
-	char *line = calloc(llen + 1, 1);
-	if(!line) {
-		fprintf(stderr, "ircsock_fetch: calloc failure\n");
-		return NULL;
-	}
-
-	strncpy(line, ircsock->buf, llen);
-	line[llen] = '\0';
-
-	size_t offset = 0;
-	while(offset + 2 + llen < IRCSOCK_BUF_SIZE) {
-		ircsock->buf[offset] = ircsock->buf[offset + llen + 2];
-		offset++;
-	}
-	while(offset < IRCSOCK_BUF_SIZE)
-		ircsock->buf[offset++] = '\0';
-
-	return line;
-} // }}}
-
 char *ircsock_read(IRCSock *ircsock) { // {{{
 	size_t blen = strlen(ircsock->buf);
-	char *line = ircsock_fetch(ircsock);
+	char *line = util_fetch(ircsock->buf, IRCSOCK_BUF_SIZE, "\r\n");
 	if(line != NULL)
 		return line;
 
@@ -235,7 +200,7 @@ char *ircsock_read(IRCSock *ircsock) { // {{{
 		return NULL;
 	}
 
-	line = ircsock_fetch(ircsock);
+	line = util_fetch(ircsock->buf, IRCSOCK_BUF_SIZE, "\r\n");
 	return line;
 } // }}}
 
