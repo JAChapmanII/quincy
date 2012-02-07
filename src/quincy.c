@@ -201,8 +201,12 @@ int main(int argc, char **argv) {
 							}
 							free(mname);
 							free(uargs);
-							printf("PRIVMSG %s :%s: module %s reloaded\n",
-									chan, owner, rstrs[1]);
+							if(module_load(ml->this, moddir) > 0)
+								printf("PRIVMSG %s :%s: module %s reloaded\n",
+										chan, owner, rstrs[1]);
+							else
+								printf("PRIVMSG %s :%s: module %s reload failed\n",
+										chan, owner, rstrs[1]);
 						} else {
 							printf("PRIVMSG %s :%s: module not found\n", chan, owner);
 						}
