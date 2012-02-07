@@ -1,1 +1,3 @@
 In conman, look for a specific return value for restart?
+Have usage args come from the modules, not the config
+
