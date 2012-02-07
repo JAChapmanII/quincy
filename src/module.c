@@ -79,7 +79,7 @@ void module_freePCRE(Module *module) { // {{{
 
 // TODO: reduce these, they share almost entirely the same code
 char **module_fetchNames(Module *module) { // {{{
-	char *namesArgV[3] = { "names" };
+	char *namesArgV[1] = { "names" };
 	Subprocess *sp = subprocess_create(module->binary, namesArgV, 1);
 	if(sp == NULL) {
 		fprintf(stderr, "module_fetchNames: couldn't create subprocess\n");
@@ -117,7 +117,7 @@ char **module_fetchNames(Module *module) { // {{{
 	return names;
 } // }}}
 char **module_fetchRegex(Module *module) { // {{{
-	char *regexArgV[3] = { "regex" };
+	char *regexArgV[1] = { "regex" };
 	Subprocess *sp = subprocess_create(module->binary, regexArgV, 1);
 	if(sp == NULL) {
 		fprintf(stderr, "module_fetchRegex: couldn't create subprocess\n");
@@ -231,6 +231,38 @@ int module_load(Module *module, char *moddir) {
 	}
 
 	return module->loaded;
+}
+char *module_exec(Module *module, char **args, int idx) {
+	if(!module || !args)
+		return NULL;
+	char **argv = calloc(sizeof(char *), 6);
+	if(!argv) {
+		fprintf(stderr, "module_exec: argv alloc failure\n");
+		return NULL;
+	}
+	argv[0] = "dispatch";
+	for(int i = 0; i < 4; ++i)
+		argv[i + 1] = args[i];
+	char idxBuf[BUF_SIZE] = { 0 };
+	snprintf(idxBuf, BUF_SIZE, "%d", idx);
+	argv[5] = idxBuf;
+	for(int i = 0; i < 6; ++i)
+		fprintf(stderr, "module_exec: %d: %s\n", i, argv[i]);
+	// TODO: this is a lot like fetchNames and fetchRegex
+	Subprocess *sp = subprocess_create(module->binary, argv, 6);
+	if(sp == NULL) {
+		fprintf(stderr, "module_exec: couldn't create subprocess\n");
+		return NULL;
+	}
+	if(subprocess_run(sp) != 0) {
+		fprintf(stderr, "module_exec: could not run subproc\n");
+		subprocess_free(sp);
+		return NULL;
+	}
+	bufreader_setBlocking(sp->br);
+	char *line = subprocess_read(sp);
+	subprocess_free(sp);
+	return line;
 }
 
 ModuleList *modulelist_create() {

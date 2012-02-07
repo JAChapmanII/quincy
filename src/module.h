@@ -21,6 +21,7 @@ typedef struct ModuleList {
 Module *module_create(char *name, char *uargs);
 void module_free(Module *module);
 int module_load(Module *module, char *moddir);
+char *module_exec(Module *module, char **args, int idx);
 
 ModuleList *modulelist_create();
 void modulelist_free(ModuleList *modules);
