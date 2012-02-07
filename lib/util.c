@@ -73,11 +73,22 @@ char *util_fetch(char *buf, size_t bufSize, char *split) { // {{{
 int util_startsWith(char *str, char *begin) { // {{{
 	if(!str || !begin)
 		return 0;
-	if(strlen(begin) == 0)
+	size_t slen = strlen(str), blen = strlen(begin);
+	if(blen == 0)
 		return 1;
-	if(strlen(str) == 0)
+	if(slen == 0)
 		return 0;
-	return (strncmp(str, begin, strlen(begin)) == 0);
+	return (strncmp(str, begin, blen) == 0);
+} // }}}
+int util_endsWith(char *str, char *end) { // {{{
+	if(!str || !end)
+		return 0;
+	size_t slen = strlen(str), elen = strlen(end);
+	if(elen == 0)
+		return 1;
+	if((slen == 0) || (slen < elen))
+		return 0;
+	return (strncmp(str + (slen - elen), end, elen) == 0);
 } // }}}
 
 char *util_substr(char *str, size_t beg, size_t len) { // {{{
