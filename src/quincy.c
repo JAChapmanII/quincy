@@ -75,6 +75,27 @@ int main(int argc, char **argv) {
 		return 3;
 	}
 
+	vmapn = vmap_find(confMap, "quincy.restart");
+	if(vmapn == NULL) {
+		fprintf(stderr, "quincy: unable to find restart regex\n");
+		return 2;
+	}
+	pcre *restart = pcre_compile(vmapn->val, 0,
+			&errorMessage, &errorOffset, NULL);
+	if(restart == NULL) {
+		fprintf(stderr, "quincy: error creating restart pcre object: %d: %s\n",
+				errorOffset, errorMessage);
+		return 3;
+	}
+
+	vmapn = vmap_find(confMap, "core.owner");
+	if(vmapn == NULL) {
+		fprintf(stderr, "quincy: unable to find owner\n");
+		return 2;
+	}
+	char *owner = vmapn->val;
+	fprintf(stderr, "quincy: owner = %s\n", owner);
+
 	ModuleList *modules = modulelist_create();
 	if(!modules) {
 		fprintf(stderr, "quincy: unable to create module list\n");
@@ -120,7 +141,12 @@ int main(int argc, char **argv) {
 			if(matchres > 0) {
 				for(int i = 0; i < matchres; ++i)
 					fprintf(stderr, "%d: %s\n", i, strs[i]);
-				printf("PRIVMSG #zebra :Hello!\n");
+				if(strcmp(owner, strs[1]) == 0) {
+					if(pcre_matches(restart, strs[4])) {
+						fprintf(stderr, "quincy: restarting\n");
+						return 77;
+					}
+				}
 				fflush(stdout);
 			}
 			if(strs != NULL)
