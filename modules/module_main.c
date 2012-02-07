@@ -19,6 +19,7 @@
  * 		3rd argument: user host mask
  * 		4th argument: target of PRIVMSG
  * 		5th argument: message portion of PRIVMSG
+ * 		6th argument: index of matched module
  */
 
 int main(int argc, char **argv) {
@@ -94,7 +95,7 @@ int main(int argc, char **argv) {
 			return retval;
 		}
 	} else if(strcmp(command, "dispatch") == 0) {
-		if(argc != 6) {
+		if(argc != 7) {
 			fprintf(stderr, "module: error: dispatch takes preparsed message\n");
 			return 2;
 		}
@@ -102,20 +103,12 @@ int main(int argc, char **argv) {
 		userHMask = argv[3];
 		target    = argv[4];
 		message   = argv[5];
+		int module = atoi(argv[6]);
 
-		for(int module = 0; module < regexCount; ++module) {
-			const char *errorMessage = NULL;
-			int errorOffset = 0;
-			pcre *re = pcre_compile(regex[module], 0,
-					&errorMessage, &errorOffset, NULL);
-			if(re == NULL) {
-				fprintf(stderr, "module: error compiling regex, %d: %s\n",
-						errorOffset, errorMessage);
-				return EREGEX_ERROR;
-			}
-			// TODO: try match
-			// TODO: show output, stop
-		}
+		char *result = dispatch(module);
+		if(result == NULL)
+			return moduleError(ENO_STRING, 0);
+		printf("%s\n", result);
 	}
 
 	int cleanupFailure = moduleCleanup();
