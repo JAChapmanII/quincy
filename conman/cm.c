@@ -8,6 +8,7 @@
 
 #include "ircsock.h"
 #include "util.h"
+#include "subprocess.h"
 #include "conf.h"
 
 #define BUF_SIZE 4096
