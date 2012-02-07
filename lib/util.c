@@ -50,14 +50,11 @@ char *util_fetch(char *buf, size_t bufSize, char *split) { // {{{
 		return NULL;
 
 	size_t llen = lb - buf;
-	char *line = calloc(llen + 1, 1);
+	char *line = util_substr(buf, 0, llen);
 	if(!line) {
-		fprintf(stderr, "util_fetch: calloc failure\n");
+		fprintf(stderr, "util_fetch: substr failure\n");
 		return NULL;
 	}
-
-	strncpy(line, buf, llen);
-	line[llen] = '\0';
 
 	size_t offset = 0, splen = strlen(split);
 	while(offset + splen + llen < bufSize) {
@@ -98,11 +95,7 @@ char *util_substr(char *str, size_t beg, size_t len) { // {{{
 	if((slen - (ssize_t)(len + beg) < 0) || ((ssize_t)beg >= slen))
 		return NULL;
 
-	char *sub = calloc(len, 1);
-	strncpy(sub, str + beg, len);
-
-	sub[len] = '\0';
-	return sub;
+	return strndup(str + beg, len);
 } // }}}
 char *util_strend(char *str, size_t beg) { // {{{
 	if(str == NULL)
