@@ -12,6 +12,7 @@
 #define MAX_SUBSTR 16
 #define OVEC_COUNT (MAX_SUBSTR * 3)
 
+int pcre_matches(pcre *regex, char *str);
 char **pcre_match(pcre *regex, char *str, int *regres);
 void freeMatchStrings(char **strings);
 
@@ -133,6 +134,27 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
+int pcre_matches(pcre *regex, char *str) { // {{{
+	if(!regex || !str)
+		return 0;
+	int ovector[OVEC_COUNT] = { 0 };
+	int matchres = pcre_exec(regex, NULL, str, strlen(str), 0, 0,
+			ovector, OVEC_COUNT);
+	if(matchres == 0) {
+		fprintf(stderr, "pcre_match: ovector not large enough\n");
+		return 0;
+	}
+	if(matchres < 0) {
+		switch(matchres) {
+			case PCRE_ERROR_NOMATCH:
+				return 0;
+			default:
+				fprintf(stderr, "pcre_match: error %d\n", matchres);
+				return 0;
+		}
+	}
+	return 1;
+} // }}}
 char **pcre_match(pcre *regex, char *str, int *regres) { // {{{
 	if(!regex || !str)
 		return NULL;
