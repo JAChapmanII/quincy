@@ -88,6 +88,20 @@ int main(int argc, char **argv) {
 		return 3;
 	}
 
+	// TODO: the last several blocks are equivalent, essentiall...
+	vmapn = vmap_find(confMap, "quincy.command");
+	if(vmapn == NULL) {
+		fprintf(stderr, "quincy: unable to find command regex\n");
+		return 2;
+	}
+	pcre *command = pcre_compile(vmapn->val, 0,
+			&errorMessage, &errorOffset, NULL);
+	if(command == NULL) {
+		fprintf(stderr, "quincy: error creating command pcre object: %d: %s\n",
+				errorOffset, errorMessage);
+		return 3;
+	}
+
 	vmapn = vmap_find(confMap, "core.owner");
 	if(vmapn == NULL) {
 		fprintf(stderr, "quincy: unable to find owner\n");
@@ -147,6 +161,41 @@ int main(int argc, char **argv) {
 						return 77;
 					}
 				}
+
+				int cmatchres = 0;
+				char **cstrs = pcre_match(command, strs[4], &cmatchres);
+				char *comstring = strs[4];
+				int matchesCommand = 0;
+				if(cmatchres > 0) {
+					matchesCommand = 1;
+					comstring = cstrs[2];
+				}
+
+				fprintf(stderr, "quincy: trying to match commands: %s\n", comstring);
+				ModuleList *ml = NULL;
+				for(ml = modules; ml && ml->this; ml = ml->next) {
+					Module *m = ml->this;
+					if(strstr(m->uargs, "specific") && !matchesCommand)
+						continue;
+					for(int r = 0; r < m->loaded; ++r) {
+						int mmatchres = 0;
+						char **mstrs = pcre_match(m->regex[r], comstring, &mmatchres);
+						if(mmatchres > 0) {
+							fprintf(stderr, "quincy: module matched: %s\n", m->name);
+							fprintf(stderr, "quincy: reg: %s\n", m->m_regex[r]);
+							char *res = module_exec(m, strs + 1, r);
+							if(res != NULL) {
+								printf("PRIVMSG %s :%s\n", chan, res);
+								free(res);
+							}
+						}
+						if(mstrs != NULL)
+							freeMatchStrings(mstrs);
+					}
+				}
+
+				if(cstrs != NULL)
+					freeMatchStrings(cstrs);
 				fflush(stdout);
 			}
 			if(strs != NULL)
