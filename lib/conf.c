@@ -147,8 +147,8 @@ char *conf_chan(void) {
 char *conf_binary(void) {
 	if(m_binary)
 		return m_binary;
-	if(m_confMap && vmap_find(m_confMap, "core.binary"))
-		return vmap_find(m_confMap, "core.binary")->val;
+	if(m_confMap && vmap_find(m_confMap, "conman.binary"))
+		return vmap_find(m_confMap, "conman.binary")->val;
 	return DEFAULT_CHAN;
 }
 
