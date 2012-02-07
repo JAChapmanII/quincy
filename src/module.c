@@ -197,8 +197,6 @@ int module_load(Module *module, char *moddir) {
 		return 0;
 	}
 
-	fprintf(stderr, "module_load: bin: %s\n", module->binary);
-
 	module->m_names = module_fetchNames(module);
 	if(module->m_names == NULL) {
 		fprintf(stderr, "module_load: could not fetch names\n");
@@ -246,8 +244,6 @@ char *module_exec(Module *module, char **args, int idx) {
 	char idxBuf[BUF_SIZE] = { 0 };
 	snprintf(idxBuf, BUF_SIZE, "%d", idx);
 	argv[5] = idxBuf;
-	for(int i = 0; i < 6; ++i)
-		fprintf(stderr, "module_exec: %d: %s\n", i, argv[i]);
 	// TODO: this is a lot like fetchNames and fetchRegex
 	Subprocess *sp = subprocess_create(module->binary, argv, 6);
 	if(sp == NULL) {

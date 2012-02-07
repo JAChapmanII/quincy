@@ -151,6 +151,7 @@ int main(int argc, char **argv) {
 			free(mname);
 			continue;
 		}
+		fprintf(stderr, "quincy: loading %s\n", mname);
 		free(mname);
 		module_load(mod, moddir); // TODO: anything about == 0?
 		modulelist_add(modules, mod);
@@ -164,8 +165,7 @@ int main(int argc, char **argv) {
 			int matchres = 0;
 			char **strs = pcre_match(pmsg, buf, &matchres);
 			if(matchres > 0) {
-				for(int i = 0; i < matchres; ++i)
-					fprintf(stderr, "%d: %s\n", i, strs[i]);
+				fprintf(stderr, "@%s, %s: %s\n", strs[3], strs[1], strs[4]);
 				if(strcmp(owner, strs[1]) == 0) {
 					if(pcre_matches(restart, strs[4])) {
 						fprintf(stderr, "quincy: restarting\n");
@@ -222,7 +222,6 @@ int main(int argc, char **argv) {
 					comstring = cstrs[2];
 				}
 
-				fprintf(stderr, "quincy: trying to match commands: %s\n", comstring);
 				ModuleList *ml = NULL;
 				for(ml = modules; ml && ml->this; ml = ml->next) {
 					Module *m = ml->this;
@@ -232,8 +231,6 @@ int main(int argc, char **argv) {
 						int mmatchres = 0;
 						char **mstrs = pcre_match(m->regex[r], comstring, &mmatchres);
 						if(mmatchres > 0) {
-							fprintf(stderr, "quincy: module matched: %s\n", m->name);
-							fprintf(stderr, "quincy: reg: %s\n", m->m_regex[r]);
 							char *res = module_exec(m, strs + 1, r);
 							if(res != NULL) {
 								printf("PRIVMSG %s :%s\n", chan, res);
