@@ -152,10 +152,8 @@ int main(int argc, char **argv) {
 			continue;
 		}
 		free(mname);
-		if(module_load(mod, moddir) != 0)
-			modulelist_add(modules, mod);
-		else
-			module_free(mod);
+		module_load(mod, moddir); // TODO: anything about == 0?
+		modulelist_add(modules, mod);
 	}
 
 	time_t responseTimes[3] = { 0 };
