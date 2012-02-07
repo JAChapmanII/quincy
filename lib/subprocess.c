@@ -121,4 +121,7 @@ int subprocess_kill(Subprocess *subproc) {
 	return kill(subproc->pid, SIGKILL);
 }
 
+FILE *subprocess_wfile(Subprocess *subproc) {
+	return fdopen(subproc->pipe[1], "w");
+}
 

@@ -2,6 +2,7 @@
 #define SUBPROCESS_H
 
 #include <sys/types.h>
+#include <stdio.h>
 
 typedef enum { SP_BEXEC, SP_EXEC, SP_AEXEC, SP_INVALID } SubprocessStatus;
 
@@ -26,5 +27,8 @@ int subprocess_run(Subprocess *subproc);
 int subprocess_status(Subprocess *subproc);
 // Send the SIGKILL signal to the running subprocess, returs results of kill
 int subprocess_kill(Subprocess *subproc);
+
+// Return a write-mode FILE * hooked to the stdin of a subprocess
+FILE *subprocess_wfile(Subprocess *subproc);
 
 #endif // SUBPROCESS_H
