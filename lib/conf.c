@@ -9,11 +9,11 @@
 
 static VMap *m_confMap = NULL;
 
-static char *m_server = DEFAULT_SERVER;
-static char *m_nick   = DEFAULT_NICK;
-static char *m_chan   = DEFAULT_CHAN;
-static char *m_binary = DEFAULT_BINARY;
-static int m_port = DEFAULT_PORT;
+static char *m_server = NULL;
+static char *m_nick   = NULL;
+static char *m_chan   = NULL;
+static char *m_binary = NULL;
+static int m_port = -1;
 
 VMap *conf_map(void) {
 	return m_confMap;
@@ -112,20 +112,43 @@ void conf_read(const char *file) {
 }
 
 char *conf_server(void) {
-	return m_server;
+	if(m_server)
+		return m_server;
+	if(m_confMap && vmap_find(m_confMap, "core.server"))
+		return vmap_find(m_confMap, "core.server")->val;
+	return DEFAULT_SERVER;
 }
 int conf_port(void) {
-	return m_port;
+	if(m_port > 0)
+		return m_port;
+	if(m_confMap && vmap_find(m_confMap, "core.port")) {
+		int tmp = atoi(vmap_find(m_confMap, "core.port")->val);
+		if(tmp > 0)
+			return tmp;
+	}
+	return DEFAULT_PORT;
 }
 
 char *conf_nick(void) {
-	return m_nick;
+	if(m_nick)
+		return m_nick;
+	if(m_confMap && vmap_find(m_confMap, "core.nick"))
+		return vmap_find(m_confMap, "core.nick")->val;
+	return DEFAULT_NICK;
 }
 char *conf_chan(void) {
-	return m_chan;
+	if(m_chan)
+		return m_chan;
+	if(m_confMap && vmap_find(m_confMap, "core.chan"))
+		return vmap_find(m_confMap, "core.chan")->val;
+	return DEFAULT_CHAN;
 }
 
 char *conf_binary(void) {
-	return m_binary;
+	if(m_binary)
+		return m_binary;
+	if(m_confMap && vmap_find(m_confMap, "core.binary"))
+		return vmap_find(m_confMap, "core.binary")->val;
+	return DEFAULT_CHAN;
 }
 
