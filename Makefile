@@ -9,7 +9,7 @@ BINS=$(BDIR)/quincy $(BDIR)/conman
 TESTS=$(TBDIR)/conftest $(TBDIR)/mittest
 MAPS=map/vmap map/simap map/ismap
 MOUT=$(LDIR)/vmap.? $(LDIR)/simap.? $(LDIR)/ismap.?
-MODULES=$(MBDIR)/wave $(MBDIR)/love
+MODULES=$(MBDIR)/wave $(MBDIR)/love $(MBDIR)/fish
 
 COBJS=$(ODIR)/util.o $(ODIR)/conf.o
 SOBJS=$(ODIR)/subprocess.o $(ODIR)/bufreader.o $(ODIR)/util.o
